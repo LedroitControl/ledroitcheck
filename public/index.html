@@ -1,77 +1,35 @@
-<!DOCTYPE html>
-<html lang="es">
+<!doctype html>
+<html lang="es" data-include-header="true">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LEDROITCHECK - Nuevo Inicio</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .container {
-            background: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            text-align: center;
-            max-width: 500px;
-        }
-        
-        h1 {
-            color: #333;
-            margin-bottom: 20px;
-        }
-        
-        p {
-            color: #666;
-            line-height: 1.6;
-            margin-bottom: 20px;
-        }
-        
-        .status {
-            background: #e8f5e8;
-            color: #2d5a2d;
-            padding: 15px;
-            border-radius: 5px;
-            border-left: 4px solid #28a745;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LEDROITCHECK — Inicio</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <!-- Header global desde documentación -->
+  <link rel="stylesheet" href="assets/global-header.css" />
+  <script src="assets/global-header.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>🚀 LEDROITCHECK</h1>
-        <h2>Proyecto Limpio - Nuevo Inicio</h2>
-        
-        <div class="status">
-            <strong>✅ Proyecto Reiniciado Exitosamente</strong>
-            <p>Todos los archivos anteriores han sido eliminados.</p>
-            <p>El proyecto está listo para comenzar desde cero.</p>
-        </div>
-        
-        <p>
-            <strong>Archivos conservados:</strong><br>
-            • firebase-config.js (configuración esencial)<br>
-            • Archivos de configuración del proyecto<br>
-            • Documentación en /DOCUMENTACION/
-        </p>
-        
-        <p>
-            <strong>Archivos eliminados:</strong><br>
-            • Todas las páginas HTML<br>
-            • Todos los archivos JavaScript<br>
-            • Todos los estilos CSS<br>
-            • Directorio /js/ completo
-        </p>
-        
-        <p><em>Listo para implementar una nueva solución desde cero.</em></p>
-    </div>
+  <main class="page">
+    <section class="card">
+      <h2>Bienvenido a LEDROITCHECK</h2>
+      <p class="muted">Sistema conectado al ecosistema Ledroit. Use el Login para iniciar sesión.</p>
+      <div class="actions">
+        <a class="btn" href="login.html">Ir al Login</a>
+        <a class="btn secondary" href="prueba-ingderivado.html">Página de Pruebas</a>
+        <a class="btn secondary" href="ingreso-derivado.html">Procesamiento (GET)</a>
+      </div>
+    </section>
+  </main>
+  <script>
+    // Guardado: si no hay sesión, redirigir a login
+    (function(){
+      try {
+        const s = sessionStorage.getItem('ls_session') || localStorage.getItem('ls_session');
+        const ses = s ? JSON.parse(s) : null;
+        if (!ses || !ses.iniciales) { /* no hay sesión */ }
+      } catch(e) { /* ignora en index */ }
+    })();
+  </script>
 </body>
 </html>

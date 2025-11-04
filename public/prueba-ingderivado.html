@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="es" data-include-header="true">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prueba Ingreso Derivado — LEDROITCHECK</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <!-- Header global desde documentación -->
+  <link rel="stylesheet" href="assets/global-header.css" />
+  <script src="assets/global-header.js"></script>
+</head>
+<body>
+  <script>
+    // Guardia de sesión: si no hay sesión, enviar a login
+    (function(){
+      try{
+        const s = sessionStorage.getItem('ls_session') || localStorage.getItem('ls_session');
+        const ses = s ? JSON.parse(s) : null;
+        if (!ses || !ses.iniciales) {
+          window.location.replace('login.html');
+        }
+      }catch(e){ window.location.replace('login.html'); }
+    })();
+  </script>
+
+  <main class="page">
+    <section class="card">
+      <h2>Pruebas de Ingreso Derivado</h2>
+      <div class="tabs" role="tablist">
+        <div class="tab active" data-tab="activo" role="tab">ACTIVO</div>
+        <div class="tab" data-tab="pasivo" role="tab">PASIVO</div>
+        <div class="tab" data-tab="info" role="tab">INFORMACIÓN</div>
+      </div>
+
+      <div class="tabpanel active" id="panel-activo" role="tabpanel">
+        <div class="field">
+          <label>URL destino (el usuario la ingresa)</label>
+          <input type="url" id="urlDestino" placeholder="https://ejemplo.web.app/ingreso-derivado.html" />
+        </div>
+        <div class="field">
+          <label>respuestaLMaster (JSON)</label>
+          <textarea id="respuestaJson" rows="8" placeholder='{"success":true, "data":{...}}'></textarea>
+          <small class="helper">Método obligatorio por URL (GET) conforme guía. En Fase 4 se implementa el envío real desde el gadget.</small>
+        </div>
+        <div class="actions">
+          <button class="btn" id="btnGenerar">Generar URL</button>
+          <button class="btn secondary" id="btnCopiar">Copiar URL</button>
+        </div>
+        <div class="field">
+          <label>URL generada</label>
+          <textarea id="urlGenerada" rows="3" readonly></textarea>
+        </div>
+      </div>
+
+      <div class="tabpanel" id="panel-pasivo" role="tabpanel">
+        <p class="helper">Use esta misma página como receptor: pruebe agregando <code>?data=...</code> en la URL. La recepción completa por POST se implementará en Fase 5.</p>
+        <div id="resultadoPasivo" class="card"></div>
+      </div>
+
+      <div class="tabpanel" id="panel-info" role="tabpanel">
+        <p>Esta página se apega a la guía: método URL obligatorio (GET), logs visibles y sin variaciones entre sistemas. El usuario ingresa el destino manualmente.</p>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { showToast } from './js/toast.js';
+    import { log } from './js/utils.js';
+
+    // Tabs
+    document.querySelectorAll('.tab').forEach(t => {
+      t.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tabpanel').forEach(el => el.classList.remove('active'));
+        t.classList.add('active');
+        document.getElementById('panel-' + t.dataset.tab).classList.add('active');
+      });
+    });
+
+    const $urlDestino = document.getElementById('urlDestino');
+    const $respuestaJson = document.getElementById('respuestaJson');
+    const $urlGenerada = document.getElementById('urlGenerada');
+
+    document.getElementById('btnGenerar').addEventListener('click', () => {
+      try {
+        const url = $urlDestino.value.trim();
+        if (!url) { showToast('Ingrese URL destino', 'warning'); return; }
+        const payload = $respuestaJson.value.trim();
+        JSON.parse(payload); // validate
+        const finalUrl = `${url}?data=${encodeURIComponent(payload)}`;
+        $urlGenerada.value = finalUrl;
+        showToast('URL generada (no se abre automáticamente en Fase 1)', 'info');
+      } catch (err) {
+        showToast('JSON inválido', 'error');
+      }
+    });
+
+    document.getElementById('btnCopiar').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText($urlGenerada.value); showToast('URL copiada al portapapeles', 'success'); } catch {}
+    });
+
+    // Pasivo (GET testing on this page)
+    const urlParams = new URLSearchParams(location.search);
+    const dataParam = urlParams.get('data') || urlParams.get('respuestaLMaster');
+    if (dataParam) {
+      try {
+        const obj = JSON.parse(decodeURIComponent(dataParam));
+        document.getElementById('resultadoPasivo').innerHTML = `<pre>${JSON.stringify(obj, null, 2)}</pre>`;
+        showToast('Datos recibidos por GET (vista previa Fase 1)', 'success');
+        log('Recepción GET en pruebas mostrada');
+      } catch {
+        showToast('Datos GET inválidos', 'error');
+      }
+    }
+  </script>
+</body>
+</html>

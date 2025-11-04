@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es" data-include-header="true">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Menú — LEDROITCHECK</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <!-- Header global desde documentación -->
+  <link rel="stylesheet" href="assets/global-header.css" />
+  <script src="assets/global-header.js"></script>
+</head>
+<body>
+  <script>
+    // Guardia de sesión: si no hay sesión, ir a login
+    (function(){
+      try{
+        const s = sessionStorage.getItem('ls_session') || localStorage.getItem('ls_session');
+        const ses = s ? JSON.parse(s) : null;
+        if (!ses || !ses.iniciales) {
+          window.location.replace('login.html');
+        }
+      }catch(e){ window.location.replace('login.html'); }
+    })();
+  </script>
+  <main class="page">
+    <section class="card">
+      <h2>Menú Principal</h2>
+      <p class="muted">Sesión activa y accesos iniciales.</p>
+      <div id="userInfo" class="row"></div>
+      <div class="actions">
+        <a class="btn" href="prueba-ingderivado.html">Página de Pruebas</a>
+        <a class="btn secondary" href="ingreso-derivado.html">Procesamiento (GET)</a>
+        <a class="btn secondary" href="index.html">Inicio</a>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    try {
+      const s = sessionStorage.getItem('ls_session') || localStorage.getItem('ls_session');
+      const ses = s ? JSON.parse(s) : null;
+      const $userInfo = document.getElementById('userInfo');
+      if (ses) {
+        $userInfo.innerHTML = `
+          <div class="col">
+            <strong>Iniciales:</strong> ${ses.iniciales || ''}
+          </div>
+          <div class="col">
+            <strong>Nombre:</strong> ${ses.nombre || ''}
+          </div>
+          <div class="col">
+            <strong>Empresa activa:</strong> ${ses.empresa_activa || '(no definida)'}
+          </div>
+        `;
+        // Notificar al header global si aún no está
+        window.ledroitAuth = { user: { nombre: ses.nombre, foto_url: ses.foto_url, empresas: ses.empresas }, iniciales: ses.iniciales };
+        window.dispatchEvent(new CustomEvent('sessionChanged', { detail: window.ledroitAuth }));
+      } else {
+        $userInfo.innerHTML = '<p class="muted">No hay sesión activa. <a href="login.html">Ingresar</a></p>';
+      }
+    } catch (e) { console.warn('No se pudo leer ls_session:', e); }
+  </script>
+</body>
+</html>

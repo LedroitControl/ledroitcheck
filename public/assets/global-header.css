@@ -1,0 +1,632 @@
+/**
+ * GLOBAL HEADER STYLES - LEDROITSENDER
+ * Estilos independientes para el sistema de header global
+ * 
+ * PORTABLE: Este archivo puede copiarse a otros sistemas sin modificaciones
+ * AUTOCONTENIDO: No depende de otros archivos CSS
+ */
+
+/* ==========================================================================
+   CONTENEDOR PRINCIPAL
+   ========================================================================== */
+
+.global-header-container {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    width: 100%;
+}
+
+/* ==========================================================================
+   HEADER BASE
+   ========================================================================== */
+
+.global-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.95));
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    min-height: 70px;
+    box-sizing: border-box;
+}
+
+/* ===========================================================================
+   SECCIÓN DE MARCA/BRAND
+   ========================================================================== */
+
+.header-brand-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.brand-logo {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.brand-name {
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: #1f2937;
+    letter-spacing: -0.025em;
+    margin: 0;
+}
+
+.brand-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.brand-subtitle {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ===========================================================================
+   SECCIÓN DE USUARIO
+   ========================================================================== */
+
+.header-user-section {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-shrink: 0;
+}
+
+/* Avatar del usuario */
+.user-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid rgba(255,255,255,0.8);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.user-avatar:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.user-avatar.avatar-initials {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+}
+
+.avatar-image {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* Información del usuario */
+.user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 120px;
+}
+
+.user-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1f2937;
+    line-height: 1.2;
+}
+
+.user-initials {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+/* ===========================================================================
+   SECCIÓN DE EMPRESAS
+   ========================================================================== */
+
+.header-companies-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    min-width: 200px;
+    max-width: 400px;
+}
+
+.companies-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+}
+
+.gh-visible-companies,
+.gh-hidden-companies {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.gh-company-line {
+    font-size: 12px;
+    color: #374151;
+    padding: 4px 8px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 4px;
+    border-left: 3px solid #10b981;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.gh-company-line.gh-company-inactive {
+    color: #6b7280;
+    border-left-color: #ef4444;
+    background: rgba(255, 255, 255, 0.6);
+}
+
+.gh-companies-toggle-btn {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    margin-top: 4px;
+    align-self: flex-end;
+    transition: all 0.2s ease;
+}
+
+.gh-companies-toggle-btn:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
+.header-companies-section.gh-expanded {
+    max-height: none;
+}
+
+/* Legacy styles for backward compatibility */
+.company-item {
+    background: rgba(255,255,255,0.7);
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 8px;
+    padding: 8px 12px;
+    transition: all 0.2s ease;
+}
+
+.company-item:hover {
+    background: rgba(255,255,255,0.9);
+    border-color: rgba(59, 130, 246, 0.2);
+    transform: translateY(-1px);
+}
+
+.company-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.company-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #1f2937;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.company-status {
+    font-size: 0.625rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.status-activa {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-inactiva {
+    background: #fef2f2;
+    color: #991b1b;
+}
+
+.company-roles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.role-badge {
+    font-size: 0.625rem;
+    font-weight: 500;
+    padding: 2px 6px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-radius: 4px;
+    border: 1px solid rgba(29, 78, 216, 0.1);
+}
+
+.no-roles {
+    font-size: 0.625rem;
+    color: #9ca3af;
+    font-style: italic;
+}
+
+/* ===========================================================================
+   BOTÓN DE LOGOUT
+   ========================================================================== */
+
+.logout-btn {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+.logout-btn:hover {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+}
+
+.logout-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+/* ===========================================================================
+   VARIANTES DEL HEADER
+   ========================================================================== */
+
+/* Header mínimo */
+.global-header-minimal {
+    padding: 12px 24px;
+    min-height: 60px;
+}
+
+.global-header-minimal .brand-name {
+    font-size: 1.125rem;
+}
+
+.global-header-minimal .brand-logo {
+    width: 36px;
+    height: 36px;
+}
+
+/* Header solo marca */
+.global-header-brand-only {
+    justify-content: center;
+    padding: 16px 24px;
+}
+
+.global-header-brand-only .header-brand-section {
+    gap: 16px;
+}
+
+/* ===========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+
+/* Tablets y pantallas medianas */
+@media (max-width: 1024px) {
+    .header-companies-section {
+        min-width: 150px;
+        max-width: 250px;
+    }
+    
+    .gh-company-line {
+        font-size: 11px;
+    }
+}
+
+/* Móviles y pantallas pequeñas - Versión limpia y simplificada */
+@media (max-width: 768px) {
+    .global-header {
+        padding: 8px 12px;
+        min-height: 56px;
+        gap: 8px;
+    }
+    
+    /* Ocultar completamente la sección de empresas en móvil */
+    .header-companies-section {
+        display: none !important;
+    }
+    
+    /* Sección de marca - Solo icono si existe */
+    .header-brand-section {
+        gap: 8px;
+        flex-shrink: 1;
+        min-width: 0;
+    }
+    
+    .brand-logo {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .brand-name {
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+    
+    .brand-subtitle {
+        display: none;
+    }
+    
+    /* Sección de usuario - Compacta */
+    .header-user-section {
+        gap: 12px;
+        flex-shrink: 0;
+    }
+    
+    .user-avatar {
+        width: 36px;
+        height: 36px;
+        font-size: 0.75rem;
+    }
+    
+    .user-info {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+        min-width: auto;
+    }
+    
+    .user-name {
+        font-size: 0.75rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    
+    .user-initials {
+        font-size: 0.625rem;
+        color: #6b7280;
+        background: rgba(107, 114, 128, 0.1);
+        padding: 2px 6px;
+        border-radius: 4px;
+        white-space: nowrap;
+    }
+    
+    .logout-btn {
+        padding: 6px 10px;
+        font-size: 0.625rem;
+        white-space: nowrap;
+    }
+}
+
+/* Móviles muy pequeños - Versión ultra compacta */
+@media (max-width: 480px) {
+    .global-header {
+        padding: 6px 8px;
+        min-height: 50px;
+        gap: 6px;
+    }
+    
+    /* Solo mostrar icono de marca si existe, ocultar nombre */
+    .brand-name {
+        display: none;
+    }
+    
+    .brand-logo {
+        width: 32px;
+        height: 32px;
+    }
+    
+    /* Si no hay logo, ocultar toda la sección de marca */
+    .header-brand-section:not(:has(.brand-logo)) {
+        display: none;
+    }
+    
+    .header-user-section {
+        gap: 8px;
+    }
+    
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 0.625rem;
+    }
+    
+    /* Mostrar solo nombre O iniciales, no ambos */
+    .user-info {
+        gap: 0;
+    }
+    
+    .user-name {
+        font-size: 0.625rem;
+        max-width: 80px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    /* Ocultar iniciales en pantallas muy pequeñas */
+    .user-initials {
+        display: none;
+    }
+    
+    .logout-btn {
+        padding: 4px 8px;
+        font-size: 0.5rem;
+        min-width: 50px;
+    }
+}
+
+/* Pantallas extra pequeñas - Solo lo esencial */
+@media (max-width: 360px) {
+    .global-header {
+        padding: 4px 6px;
+        min-height: 44px;
+    }
+    
+    .header-brand-section {
+        gap: 4px;
+    }
+    
+    .brand-logo {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .header-user-section {
+        gap: 6px;
+    }
+    
+    .user-avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 0.5rem;
+    }
+    
+    .user-name {
+        font-size: 0.5rem;
+        max-width: 60px;
+    }
+    
+    .logout-btn {
+        padding: 3px 6px;
+        font-size: 0.45rem;
+        min-width: 40px;
+    }
+}
+
+/* ===========================================================================
+   SCROLLBAR PERSONALIZADO PARA LISTA DE EMPRESAS
+   ========================================================================== */
+
+.companies-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.companies-list::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.05);
+    border-radius: 2px;
+}
+
+.companies-list::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.3);
+    border-radius: 2px;
+}
+
+.companies-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(59, 130, 246, 0.5);
+}
+
+/* ===========================================================================
+   ANIMACIONES
+   ========================================================================== */
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.global-header-container {
+    animation: fadeInDown 0.3s ease-out;
+}
+
+/* ===========================================================================
+   MODO OSCURO (OPCIONAL)
+   ========================================================================== */
+
+@media (prefers-color-scheme: dark) {
+    .global-header {
+        background: linear-gradient(180deg, rgba(17,24,39,0.98), rgba(17,24,39,0.95));
+        border-bottom-color: rgba(255,255,255,0.1);
+    }
+    
+    .brand-name {
+        color: #f9fafb;
+    }
+    
+    .brand-subtitle {
+        color: #9ca3af;
+    }
+    
+    .user-name {
+        color: #f9fafb;
+    }
+    
+    .user-initials {
+        color: #9ca3af;
+    }
+    
+    .company-item {
+        background: rgba(31,41,55,0.7);
+        border-color: rgba(255,255,255,0.1);
+    }
+    
+    .company-item:hover {
+        background: rgba(31,41,55,0.9);
+        border-color: rgba(59, 130, 246, 0.3);
+    }
+    
+    .company-name {
+        color: #f9fafb;
+    }
+    
+    .status-activa {
+        background: rgba(34, 197, 94, 0.2);
+        color: #4ade80;
+    }
+    
+    .status-inactiva {
+        background: rgba(239, 68, 68, 0.2);
+        color: #f87171;
+    }
+    
+    .role-badge {
+        background: rgba(59, 130, 246, 0.2);
+        color: #60a5fa;
+        border-color: rgba(59, 130, 246, 0.3);
+    }
+    
+    .no-roles {
+        color: #6b7280;
+    }
+}

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="es" data-include-header="true">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ejemplo - Header Global Ledroitsender</title>
+    
+    <!-- PASO 1: Incluir Firebase SDK (si usas Firebase) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    
+    <!-- PASO 2: Incluir archivos del header -->
+    <link rel="stylesheet" href="./assets/global-header.css">
+    <script src="./assets/firebase-init.js"></script>
+    <script src="./assets/ledroitmaster-auth.js"></script>
+    <script src="./assets/global-header.js"></script>
+    
+    <style>
+        /* Estilos de ejemplo para la página */
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .main-content {
+            padding: 40px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card h2 {
+            color: #1f2937;
+            margin-top: 0;
+        }
+        
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        
+        .highlight {
+            background: #fff3cd;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .success {
+            background: #d1edff;
+            padding: 15px;
+            border-left: 4px solid #0066cc;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <!-- El header se insertará automáticamente aquí -->
+    
+    <div class="main-content">
+        <div class="card">
+            <h2>🎯 Ejemplo de Implementación del Header Global</h2>
+            <p>Esta página demuestra cómo implementar el sistema de header global de Ledroitsender en otros sistemas.</p>
+            
+            <div class="success">
+                <strong>✅ Header Activo:</strong> El header se ha cargado automáticamente porque el elemento HTML tiene el atributo <code>data-include-header="true"</code>.
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📋 Pasos para Implementar</h2>
+            
+            <h3>1. Copiar Archivos Necesarios</h3>
+            <p>Copia estos archivos a tu proyecto:</p>
+            <div class="code-block">
+assets/
+├── global-header.css
+├── global-header.js
+├── global-header-template.html
+├── firebase-init.js (opcional)
+└── ledroitmaster-auth.js (opcional)
+            </div>
+
+            <h3>2. Incluir en tu HTML</h3>
+            <div class="code-block">
+&lt;!-- En el &lt;head&gt; --&gt;
+&lt;link rel="stylesheet" href="./assets/global-header.css"&gt;
+&lt;script src="./assets/firebase-init.js"&gt;&lt;/script&gt;
+&lt;script src="./assets/ledroitmaster-auth.js"&gt;&lt;/script&gt;
+&lt;script src="./assets/global-header.js"&gt;&lt;/script&gt;
+
+&lt;!-- En el &lt;html&gt; --&gt;
+&lt;html data-include-header="true"&gt;
+            </div>
+
+            <h3>3. Configurar Sesión de Usuario</h3>
+            <p>El header necesita datos de sesión en <code>sessionStorage</code>:</p>
+            <div class="code-block">
+// Estructura mínima requerida
+const sessionData = {
+    user: {
+        nombre: "Nombre del Usuario",
+        foto_url: "URL_del_avatar",
+        empresas: [
+            {
+                nombre: "Empresa 1",
+                empresa_activa: true,
+                usuario_activo: true,
+                rol: ["admin"]
+            }
+        ]
+    },
+    iniciales: "AB" // ✅ Usar "iniciales" (nomenclatura estándar)
+};
+
+sessionStorage.setItem('ls_session', JSON.stringify(sessionData));
+window.ledroitAuth = sessionData;
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>⚙️ Tipos de Header Disponibles</h2>
+            
+            <h3>Header Completo</h3>
+            <div class="code-block">&lt;html data-include-header="true"&gt;</div>
+            <p>Muestra logo, nombre de usuario, empresas y botón de logout.</p>
+
+            <h3>Header Mínimo</h3>
+            <div class="code-block">&lt;html data-include-header="minimal"&gt;</div>
+            <p>Solo muestra logo y nombre de la aplicación.</p>
+
+            <h3>Solo Brand</h3>
+            <div class="code-block">&lt;html data-include-header="brand-only"&gt;</div>
+            <p>Logo, nombre y subtítulo de la aplicación.</p>
+
+            <h3>Sin Header</h3>
+            <div class="code-block">&lt;html&gt; &lt;!-- Sin atributo data-include-header --&gt;</div>
+            <p>No se muestra ningún header.</p>
+        </div>
+
+        <div class="card">
+            <h2>🔧 Personalización</h2>
+            
+            <h3>Configurar Logo y Nombre</h3>
+            <p>Edita <code>global-header.js</code> líneas 15-20:</p>
+            <div class="code-block">
+this.config = {
+    templatePath: './assets/global-header-template.html',
+    cssPath: './assets/global-header.css',
+    logoPath: './assets/tu-logo.svg',
+    appName: 'Tu Aplicación'
+};
+            </div>
+
+            <h3>Adaptar Sistema de Autenticación</h3>
+            <p>Modifica <code>ledroitmaster-auth.js</code> para tu API:</p>
+            <div class="code-block">
+constructor() {
+    this.apiUrl = 'https://tu-api.com/login';
+    this.sistemaOrigen = 'TU_SISTEMA';
+    // ...
+}
+            </div>
+
+            <h3>Configurar Firebase (Opcional)</h3>
+            <p>Si usas Firebase, actualiza <code>firebase-init.js</code>:</p>
+            <div class="code-block">
+const firebaseConfig = {
+    apiKey: "tu-api-key",
+    authDomain: "tu-proyecto.firebaseapp.com",
+    projectId: "tu-proyecto",
+    // ...
+};
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🎮 Controles Programáticos</h2>
+            
+            <h3>Refrescar Header</h3>
+            <div class="code-block">
+// Método 1: Función global
+window.refreshGlobalHeader();
+
+// Método 2: Evento personalizado
+window.dispatchEvent(new CustomEvent('globalHeaderRefresh'));
+
+// Método 3: Instancia directa
+window.globalHeaderInstance.refresh();
+            </div>
+
+            <h3>Eventos Disponibles</h3>
+            <div class="code-block">
+// Escuchar cambios de sesión
+window.addEventListener('sessionChanged', (event) => {
+    console.log('Sesión actualizada:', event.detail);
+});
+
+// Escuchar logout
+window.addEventListener('userLogout', () => {
+    console.log('Usuario cerró sesión');
+});
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🚀 Prueba en Vivo</h2>
+            <p>Usa los botones de abajo para probar las funcionalidades del header:</p>
+            
+            <button onclick="testRefreshHeader()" style="margin: 5px; padding: 10px 15px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                🔄 Refrescar Header
+            </button>
+            
+            <button onclick="testChangeUser()" style="margin: 5px; padding: 10px 15px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                👤 Cambiar Usuario
+            </button>
+            
+            <button onclick="testToggleCompanies()" style="margin: 5px; padding: 10px 15px; background: #ffc107; color: black; border: none; border-radius: 4px; cursor: pointer;">
+                🏢 Toggle Empresas
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Funciones de prueba
+        function testRefreshHeader() {
+            console.log('Refrescando header...');
+            window.refreshGlobalHeader();
+        }
+
+        function testChangeUser() {
+            const newUser = {
+                user: {
+                    nombre: "Usuario de Prueba",
+                    foto_url: null,
+                    empresas: [
+                        {
+                            nombre: "Empresa Demo",
+                            empresa_activa: true,
+                            usuario_activo: true,
+                            rol: ["demo"]
+                        }
+                    ]
+                },
+                iniciales: "UP" // ✅ Usar "iniciales" (nomenclatura estándar)
+            };
+            
+            sessionStorage.setItem('ls_session', JSON.stringify(newUser));
+            window.ledroitAuth = newUser;
+            window.dispatchEvent(new CustomEvent('sessionChanged', { detail: newUser }));
+        }
+
+        function testToggleCompanies() {
+            const currentSession = JSON.parse(sessionStorage.getItem('ls_session') || '{}');
+            if (currentSession.user) {
+                const hasCompanies = currentSession.user.empresas && currentSession.user.empresas.length > 0;
+                
+                if (hasCompanies) {
+                    currentSession.user.empresas = [];
+                } else {
+                    currentSession.user.empresas = [
+                        {
+                            nombre: "Empresa Alpha",
+                            empresa_activa: true,
+                            usuario_activo: true,
+                            rol: ["admin", "user"]
+                        },
+                        {
+                            nombre: "Empresa Beta",
+                            empresa_activa: false,
+                            usuario_activo: true,
+                            rol: ["user"]
+                        },
+                        {
+                            nombre: "Empresa Gamma",
+                            empresa_activa: true,
+                            usuario_activo: false,
+                            rol: ["viewer"]
+                        }
+                    ];
+                }
+                
+                sessionStorage.setItem('ls_session', JSON.stringify(currentSession));
+                window.ledroitAuth = currentSession;
+                window.dispatchEvent(new CustomEvent('sessionChanged', { detail: currentSession }));
+            }
+        }
+
+        // Simular datos de sesión para la demo
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const demoSession = {
+                    user: {
+                        nombre: "Usuario Demo",
+                        foto_url: null,
+                        empresas: [
+                            {
+                                nombre: "Empresa Ejemplo",
+                                empresa_activa: true,
+                                usuario_activo: true,
+                                rol: ["admin"]
+                            },
+                            {
+                                nombre: "Empresa Secundaria",
+                                empresa_activa: true,
+                                usuario_activo: true,
+                                rol: ["user"]
+                            }
+                        ]
+                    },
+                    iniciales: "UD" // ✅ Usar "iniciales" (nomenclatura estándar)
+                };
+                
+                sessionStorage.setItem('ls_session', JSON.stringify(demoSession));
+                window.ledroitAuth = demoSession;
+                
+                // Refrescar header después de establecer la sesión
+                setTimeout(() => {
+                    window.dispatchEvent(new CustomEvent('sessionChanged', { detail: demoSession }));
+                }, 500);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

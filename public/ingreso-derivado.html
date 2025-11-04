@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es" data-include-header="true">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ingreso Derivado (GET) — LEDROITCHECK</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <!-- Header global desde documentación -->
+  <link rel="stylesheet" href="assets/global-header.css" />
+  <script src="assets/global-header.js"></script>
+</head>
+<body>
+  <script>
+    // Guardia de sesión: si no hay sesión, enviar a login
+    (function(){
+      try{
+        const s = sessionStorage.getItem('ls_session') || localStorage.getItem('ls_session');
+        const ses = s ? JSON.parse(s) : null;
+        if (!ses || !ses.iniciales) {
+          window.location.replace('login.html');
+        }
+      }catch(e){ window.location.replace('login.html'); }
+    })();
+  </script>
+
+  <main class="page">
+    <section class="card">
+      <h2>Procesamiento de Ingreso Derivado (GET)</h2>
+      <p class="helper">Fase 1: esta página muestra los datos recibidos por GET para verificación visual. En Fase 5 se conectará la recepción por POST y auditoría.</p>
+      <div id="resultado" class="card"></div>
+      <div class="actions">
+        <button class="btn secondary" id="btnLimpiar">Limpiar parámetros de URL</button>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { showToast } from './js/toast.js';
+    import { log } from './js/utils.js';
+
+    const params = new URLSearchParams(location.search);
+    const dataParam = params.get('data') || params.get('respuestaLMaster');
+    if (dataParam) {
+      try {
+        const obj = JSON.parse(decodeURIComponent(dataParam));
+        document.getElementById('resultado').innerHTML = `<pre>${JSON.stringify(obj, null, 2)}</pre>`;
+        showToast('Datos GET mostrados (Fase 1)', 'success');
+      } catch {
+        showToast('Parámetro inválido', 'error');
+      }
+    } else {
+      document.getElementById('resultado').innerHTML = '<p class="muted">No hay parámetros de datos en la URL.</p>';
+    }
+
+    document.getElementById('btnLimpiar').addEventListener('click', () => {
+      const url = new URL(location.href);
+      url.searchParams.delete('data');
+      url.searchParams.delete('respuestaLMaster');
+      history.replaceState({}, document.title, url.pathname);
+      document.getElementById('resultado').innerHTML = '<p class="muted">Parámetros limpiados.</p>';
+      showToast('Parámetros de URL limpiados', 'info');
+      log('URL limpia en ingreso-derivado.html');
+    });
+  </script>
+</body>
+</html>

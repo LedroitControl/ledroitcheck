@@ -10,7 +10,10 @@ El **Gadget de Ingresos Activos** es un widget flotante que permite a los usuari
 - **Lista desplegable** de sistemas disponibles hacia arriba
 - **Gestión completa de permisos** por empresa (LEDROIT/CLIENTE) y rol (A1/A2/A3/A4)
 - **Configuración dinámica** de sistemas con modales
-- **Transferencia segura** de datos de sesión por método GET
+- **Transferencia segura** de datos de sesión mediante método POST con autenticación estándar ledroitmaster
+ - **Transferencia segura** de datos de sesión mediante método POST con autenticación estándar ledroitmaster
+   - Endpoint estandarizado de recepción: `ingreso-derivado` (POST)
+   - Página de procesamiento visual: `ingreso-derivado.html` (GET)
 - **Animaciones suaves** con cubic-bezier y diseño consistente
 - **Notificaciones toast** para feedback del usuario
 
@@ -31,7 +34,7 @@ Agregar la siguiente línea en el `<head>` de cada página donde debe aparecer:
 <script src="js/ingresos-activos.js"></script>
 ```
 
-**NOTA IMPORTANTE:** El gadget se auto-inicializa cuando el DOM está listo y verifica automáticamente si debe aparecer en la página actual.
+**NOTA IMPORTANTE:** El gadget se auto-inicializa cuando el DOM está listo y verifica automáticamente si debe aparecer en la página actual. Y DEBES IMPLEMENTARLO EXACTAMENTE COMO SE SPECIFICA EN ESTA GUÍA. No similar, ni parecido:
 
 ### 2. ESTRUCTURA HTML GENERADA DINÁMICAMENTE
 
@@ -577,7 +580,7 @@ El archivo JavaScript completo maneja:
 - Carga de sistemas desde Firestore (principal) o localStorage (fallback)
 - Renderizado dinámico de sistemas según permisos
 - Modales para agregar/editar/configurar sistemas
-- Transferencia segura de datos de sesión por GET
+- Transferencia segura de datos mediante método POST con autenticación estándar ledroitmaster
 - Sistema de notificaciones toast
 - Validaciones de formularios
 
@@ -591,11 +594,9 @@ El archivo JavaScript completo maneja:
 
 ## 🚨 CÓDIGO JAVASCRIPT COMPLETO
 
-**INSTRUCCIONES:** Copiar y pegar **TODO** el contenido del archivo `js/ingresos-activos.js` (1,724 líneas) exactamente aquí:
+**INSTRUCCIONES:** Copiar y pegar **TODO** el contenido del archivo `ingresos-activos.js` anexo en la carpeta de documentación.
 
-```javascript
-**INSERTAR AQUÍ EL ingresos-activos.js COMPLETO**
-```
+
 
 ---
 
@@ -616,18 +617,44 @@ El archivo JavaScript completo maneja:
 5. **Responsive:** Adaptación automática en móviles
 
 ### ✅ **REGLAS DE FUNCIONALIDAD:**
-1. **Método GET:** Solo transferencia por URL, nunca POST
+1. **Autenticación estándar:** Uso de sesión ledroitAuth con iniciales
 2. **Firestore primario:** localStorage como fallback
 3. **Permisos estrictos:** Verificación por empresa y rol
 4. **Validaciones:** Campos obligatorios en formularios
 5. **Notificaciones:** Toast para feedback del usuario
+6. **Conversión automática:** Campos específicos se convierten a mayúsculas
+7. **Jerarquía de roles:** Selección automática de roles superiores
+
+### 🔤 **CONVERSIÓN AUTOMÁTICA A MAYÚSCULAS:**
+Los siguientes campos se convierten automáticamente a mayúsculas mediante `style="text-transform: uppercase;"`:
+- **NOMBRE DEL SISTEMA RECEPTOR**
+- **SISTEMA DE ORIGEN** 
+- **EMPRESA SOLICITANTE**
+
+### 📊 **JERARQUÍA DE ROLES (A1 > A2 > A3 > A4):**
+**REGLA PRINCIPAL:** A1 es el rol superior, A4 es el rol inferior.
+
+**COMPORTAMIENTO AUTOMÁTICO:**
+- Si selecciono **A2** → Se selecciona automáticamente **A1**
+- Si selecciono **A3** → Se seleccionan automáticamente **A1** y **A2**  
+- Si selecciono **A4** → Se seleccionan automáticamente **A1**, **A2** y **A3**
+
+**COMPORTAMIENTO AL DESMARCAR:**
+- Si desmarco **A1** → Se desmarcan automáticamente **A2**, **A3** y **A4**
+- Si desmarco **A2** → Se desmarcan automáticamente **A3** y **A4** (A1 permanece)
+- Si desmarco **A3** → Se desmarca automáticamente **A4** (A1 y A2 permanecen)
+
+**APLICACIÓN:**
+- ✅ **Modal Agregar Sistema:** Jerarquía activa
+- ✅ **Modal Editar Sistema:** Jerarquía activa
+- ✅ **Todas las empresas:** Jerarquía independiente por empresa
 
 ### ⚠️ **ADVERTENCIAS IMPORTANTES:**
 - **NO modificar** los estilos CSS inyectados
 - **NO cambiar** las dimensiones del botón (60px × 60px)
 - **NO alterar** el gradiente de colores
 - **NO implementar** en páginas no autorizadas
-- **NO usar** método POST para transferencia de datos
+- **USAR SIEMPRE** método POST con autenticación estándar ledroitmaster e iniciales
 
 ## CONCLUSIÓN
 

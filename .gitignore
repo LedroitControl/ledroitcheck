@@ -123,6 +123,11 @@ dist
 # Firebase config
 .firebaserc
 
+# Seguridad: credenciales de Service Account (NO se deben commitear)
+private/
+*.serviceAccount.json
+ledroitcheck-firebase-adminsdk-*.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

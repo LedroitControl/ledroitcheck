@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login — LEDROITCHECK</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <!-- Firebase SDK (compat) para Firestore respaldo -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="firebase-config.js"></script>
+</head>
+<body>
+  <div class="login-wrapper">
+    <section class="card login-card" aria-label="Autenticación">
+      <div class="login-logo" aria-hidden="true">
+        <!-- Clock SVG logo centrado -->
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="10" fill="#e8f5e9" stroke="#1b5e20" stroke-width="1.5"></circle>
+          <circle cx="12" cy="12" r="1.8" fill="#1b5e20"></circle>
+          <path d="M12 12 L12 7" stroke="#2e7d32" stroke-width="2.2" stroke-linecap="round"></path>
+          <path d="M12 12 L16 12" stroke="#66bb6a" stroke-width="2" stroke-linecap="round"></path>
+        </svg>
+      </div>
+      <h2 class="login-title">LEDROITCHECK</h2>
+      <form class="form" id="loginForm">
+        <div class="field">
+          <label for="iniciales">Iniciales</label>
+          <input type="text" id="iniciales" name="iniciales" autocomplete="off" autofocus placeholder="ABC123" />
+        </div>
+
+        <div class="field">
+          <label for="claBComun">Clave común (claBComun)</label>
+          <div class="input-with-toggle">
+            <input type="text" id="claBComun" name="claBComun" autocomplete="off" class="masked" placeholder="••••••" />
+            <button type="button" class="toggle-btn" id="toggleMask" aria-label="Mostrar u ocultar clave">Mostrar</button>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn">Ingresar</button>
+          <button type="reset" class="btn secondary">Limpiar</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <script type="module">
+    import { normalizarIniciales, log } from './js/utils.js';
+    import { showToast } from './js/toast.js';
+    import { openModal } from './js/modal.js';
+
+    const $inic = document.getElementById('iniciales');
+    const $cla = document.getElementById('claBComun');
+    const $toggle = document.getElementById('toggleMask');
+    const $form = document.getElementById('loginForm');
+
+    $inic.addEventListener('input', () => {
+      const pos = $inic.selectionStart;
+      $inic.value = normalizarIniciales($inic.value);
+      $inic.setSelectionRange(pos, pos);
+    });
+
+    // Toggle visual mask without using type="password"
+    let masked = true;
+    $toggle.addEventListener('click', () => {
+      masked = !masked;
+      if (masked) { $cla.classList.add('masked'); $toggle.textContent = 'Mostrar'; }
+      else { $cla.classList.remove('masked'); $toggle.textContent = 'Ocultar'; }
+    });
+
+    const AUTH_URL = 'https://authlogin-fmunxt6pjq-uc.a.run.app';
+
+    async function postLogin(iniciales, claBComun) {
+      const payload = { iniciales, claBComun, sistemaOrigen: 'LEDROITCHECK' };
+      const res = await fetch(AUTH_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    }
+
+    function crearSesionDesdeRespuesta(resp, inicialesFallback) {
+      const d = resp?.data || {};
+      const ls_session = {
+        iniciales: d.iniciales || inicialesFallback,
+        nombre: d.nombre || 'Usuario',
+        foto_url: d.foto_url || null,
+        empresas: d.empresas || [],
+        empresa_activa: d.empresa_activa || null,
+        usuario_activo: d.usuario_activo || null,
+        rol: d.rol || [],
+        sistemaOrigen: 'LEDROITCHECK',
+        timestamp: new Date().toISOString()
+      };
+      try {
+        localStorage.setItem('ls_session', JSON.stringify(ls_session));
+        sessionStorage.setItem('ls_session', JSON.stringify(ls_session));
+      } catch {}
+      return ls_session;
+    }
+
+    async function fallbackConRespaldo(iniciales, claBComun) {
+      try {
+        if (typeof obtenerUltimoIngreso === 'function') {
+          const respaldo = await obtenerUltimoIngreso(iniciales);
+          if (respaldo && respaldo.respuestaLMaster) {
+            // Validar claBComun contra respaldo, según documentación
+            if (respaldo.claBComun && respaldo.claBComun !== claBComun) {
+              showToast('La claBComun no coincide con el respaldo.', 'error');
+              return null;
+            }
+            const ok = await openModal({
+              title: 'Usar respaldo de Firestore',
+              content: 'No pudimos conectar con el servicio. ¿Deseas usar el último respaldo para continuar?',
+              okText: 'Usar respaldo',
+              cancelText: 'Cancelar'
+            });
+            if (ok) {
+              const ls = crearSesionDesdeRespuesta(respaldo.respuestaLMaster, iniciales);
+              showToast('Sesión iniciada con respaldo', 'info');
+              return ls;
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Fallback error:', err);
+      }
+      return null;
+    }
+
+    $form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const iniciales = normalizarIniciales($inic.value.trim());
+      const claBComun = $cla.value.trim();
+      if (!iniciales) { showToast('Ingrese sus iniciales', 'warning'); return; }
+      if (!claBComun) { showToast('Ingrese su claBComun', 'warning'); return; }
+
+      showToast('Conectando…', 'info');
+      try {
+        const respuesta = await postLogin(iniciales, claBComun);
+        if (respuesta?.success) {
+          const ls = crearSesionDesdeRespuesta(respuesta, iniciales);
+          // Respaldo en Firestore si está disponible
+          try {
+            if (typeof guardarUltimoIngresoSatisfactorio === 'function') {
+              const respuestaParaRespaldo = {
+                ...respuesta,
+                data: { ...(respuesta.data || {}), claBComun }
+              };
+              await guardarUltimoIngresoSatisfactorio(respuestaParaRespaldo);
+            }
+          } catch (e) { console.warn('No se pudo respaldar en Firestore:', e); }
+          showToast('Ingreso exitoso', 'success');
+          setTimeout(() => { window.location.href = './menu.html'; }, 500);
+        } else {
+          const msg = respuesta?.message || 'Credenciales inválidas';
+          showToast(msg, 'error');
+        }
+      } catch (err) {
+        console.error('Error de conexión:', err);
+        showToast('Error de conexión con el servicio. Intentando respaldo…', 'warning');
+        const ls = await fallbackConRespaldo(iniciales, claBComun);
+        if (ls) {
+          setTimeout(() => { window.location.href = './menu.html'; }, 500);
+        } else {
+          showToast('No se pudo iniciar sesión. Intenta nuevamente más tarde.', 'error');
+        }
+      }
+    });
+  </script>
+</body>
+</html>

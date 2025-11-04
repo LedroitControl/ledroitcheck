@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Prueba Ingreso Derivado - LedroitSender</title>
+    <link rel="icon" type="image/svg+xml" href="./assets/logo-ledroitsender.svg" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { text-align: center; color: white; margin-bottom: 30px; }
+        .header h1 { font-size: 2.5rem; margin-bottom: 10px; }
+        .header p { font-size: 1.1rem; opacity: 0.9; }
+        .tabs { display: flex; background: white; border-radius: 10px 10px 0 0; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .tab { flex: 1; padding: 15px 20px; background: #f8f9fa; border: none; cursor: pointer; font-size: 1rem; font-weight: 600; transition: all 0.3s; }
+        .tab.active { background: white; color: #667eea; }
+        .tab:hover { background: #e9ecef; }
+        .tab.active:hover { background: white; }
+        .content { background: white; border-radius: 0 0 10px 10px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .section { display: none; }
+        .section.active { display: block; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #667eea; }
+        .btn { background: #667eea; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: all 0.3s; margin: 5px; }
+        .btn:hover { background: #5a6fd8; transform: translateY(-2px); }
+        .btn.secondary { background: #6c757d; }
+        .btn.secondary:hover { background: #5a6268; }
+        .btn.success { background: #28a745; }
+        .btn.success:hover { background: #218838; }
+        .btn.warning { background: #ffc107; color: #212529; }
+        .btn.warning:hover { background: #e0a800; }
+        .log-area { background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 8px; padding: 15px; height: 300px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 0.9rem; margin-top: 20px; }
+        .log-entry { margin-bottom: 5px; padding: 5px; border-radius: 4px; }
+        .log-info { color: #0066cc; }
+        .log-success { color: #28a745; background: #d4edda; }
+        .log-error { color: #dc3545; background: #f8d7da; }
+        .log-warning { color: #856404; background: #fff3cd; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: #f8f9fa; border-radius: 8px; padding: 20px; border: 2px solid #e9ecef; }
+        .card h3 { color: #667eea; margin-bottom: 15px; }
+        .session-info { background: #e7f3ff; border: 2px solid #b3d9ff; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
+        .json-input { height: 200px; font-family: 'Courier New', monospace; }
+        .json-output { height: 300px; font-family: 'Courier New', monospace; background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 8px; padding: 15px; overflow-y: auto; }
+        .alert { padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .alert-info { background: #d1ecf1; border: 2px solid #bee5eb; color: #0c5460; }
+        .alert-success { background: #d4edda; border: 2px solid #c3e6cb; color: #155724; }
+        .alert-warning { background: #fff3cd; border: 2px solid #ffeaa7; color: #856404; }
+        .alert-error { background: #f8d7da; border: 2px solid #f5c6cb; color: #721c24; }
+        .no-session { text-align: center; padding: 40px; }
+        .no-session h2 { color: #dc3545; margin-bottom: 20px; }
+        .no-session p { margin-bottom: 20px; color: #666; }
+        
+        /* Estilos para toasts */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 350px;
+        }
+
+        .toast {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            margin-bottom: 10px;
+            padding: 16px;
+            border-left: 4px solid #007bff;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            border-left-color: #28a745;
+        }
+
+        .toast.error {
+            border-left-color: #dc3545;
+        }
+
+        .toast.warning {
+            border-left-color: #ffc107;
+        }
+
+        .toast.info {
+            border-left-color: #17a2b8;
+        }
+
+        .toast-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .toast-body {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: #999;
+            padding: 0;
+            margin-left: 10px;
+        }
+
+        .toast-close:hover {
+            color: #333;
+        }
+
+        .toast-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: rgba(0,0,0,0.1);
+            width: 100%;
+            transform-origin: left;
+            animation: toast-progress 4s linear;
+        }
+
+        @keyframes toast-progress {
+            from { transform: scaleX(1); }
+            to { transform: scaleX(0); }
+        }
+
+        .toast.success .toast-progress {
+            background: #28a745;
+        }
+
+        .toast.error .toast-progress {
+            background: #dc3545;
+        }
+
+        .toast.warning .toast-progress {
+            background: #ffc107;
+        }
+
+        .toast.info .toast-progress {
+            background: #17a2b8;
+        }
+    /* Responsive */
+            @media (max-width: 768px) {
+                .container {
+                    margin: 10px;
+                    padding: 15px;
+                }
+                
+                .tabs {
+                    flex-direction: column;
+                }
+                
+                .tab {
+                    margin-bottom: 5px;
+                }
+                
+                .form-row {
+                    flex-direction: column;
+                }
+                
+                .form-group {
+                    margin-right: 0;
+                    margin-bottom: 15px;
+                }
+
+                .toast-container {
+                    top: 10px;
+                    right: 10px;
+                    left: 10px;
+                    max-width: none;
+                }
+    </style>
+</head>
+<body>
+    <!-- Contenedor de toasts -->
+    <div class="toast-container" id="toastContainer"></div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>🧪 Prueba Ingreso Derivado</h1>
+            <p>Herramienta para probar ingresos derivados activos y pasivos en sistemas de la Familia Ledroit</p>
+        </div>
+
+        <!-- Verificación de sesión -->
+        <div id="noSessionAlert" class="no-session" style="display: none;">
+            <div class="alert alert-error">
+                <h2>🔒 Acceso Restringido</h2>
+                <p>Debes estar autenticado para usar esta herramienta de pruebas.</p>
+                <p>Por favor, inicia sesión primero en el sistema.</p>
+                <button class="btn" onclick="window.location.href='index.html'">🔑 Ir al Login</button>
+            </div>
+        </div>
+
+        <div id="mainContent" style="display: none;">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('activo')">🚀 Modo ACTIVO</button>
+                <button class="tab" onclick="switchTab('pasivo')">📥 Modo PASIVO</button>
+                <button class="tab" onclick="switchTab('info')">📋 Información</button>
+            </div>
+
+            <div class="content">
+                <!-- MODO ACTIVO -->
+                <div id="activo" class="section active">
+                    <h2>🚀 Ingreso Derivado ACTIVO</h2>
+                    <p>Envía usuarios desde este sistema hacia otros sistemas de la familia Ledroit.</p>
+
+                    <div class="session-info">
+                        <h3>📋 Sesión Actual</h3>
+                        <div id="sessionInfo">Cargando información de sesión...</div>
+                    </div>
+
+                    <div class="grid">
+                        <div class="card">
+                            <h3>🎯 Configuración de Envío</h3>
+                            <div class="form-group">
+                                <label for="urlDestino">URL del Sistema Destino</label>
+                                <input type="url" id="urlDestino" placeholder="https://ejemplo.web.app/ingreso-derivado">
+                            </div>
+                            <div class="form-group">
+                                <label for="sistemaDestino">Nombre del Sistema Destino</label>
+                                <input type="text" id="sistemaDestino" placeholder="NOMBRE_SISTEMA_DESTINO">
+                            </div>
+                            <button class="btn" onclick="enviarIngresoDerivado()">🚀 Enviar Usuario</button>
+                        </div>
+
+                        <div class="card">
+                            <h3>⚙️ Opciones Avanzadas</h3>
+                            <div class="form-group">
+                                <label for="metodoEnvio">Método de Envío</label>
+                                <select id="metodoEnvio">
+                                    <option value="post">POST con formulario (Estándar Ledroit)</option>
+                                </select>
+                            </div>
+                            <button class="btn warning" onclick="generarJSON()">📋 Generar JSON</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODO PASIVO -->
+                <div id="pasivo" class="section">
+                    <h2>📥 Ingreso Derivado PASIVO</h2>
+                    <p>Simula la recepción de usuarios desde otros sistemas de la familia Ledroit.</p>
+
+                    <div class="alert alert-info">
+                        <strong>💡 Instrucciones:</strong> Pega el JSON que recibirías de otro sistema y prueba el procesamiento.
+                    </div>
+
+                    <div class="form-group">
+                        <label for="jsonInput">JSON de Prueba (respuestaLMaster)</label>
+                        <textarea id="jsonInput" class="json-input" placeholder="Pega aquí el JSON de respuestaLMaster que recibirías de otro sistema..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <button class="btn success" onclick="actualizarTimestamp()">⏰ Actualizar Timestamp</button>
+                        <button class="btn" onclick="testIngresoDerivadoPasivo()">🧪 Probar Ingreso Pasivo</button>
+                        <button class="btn secondary" onclick="enviarAIngresoDerivado()">📤 Enviar al endpoint /ingreso-derivado (POST)</button>
+                    </div>
+                </div>
+
+                <!-- INFORMACIÓN -->
+                <div id="info" class="section">
+                    <h2>📋 Información del Sistema</h2>
+                    
+                    <div class="alert alert-info">
+                        <h3>🎯 Propósito de esta Herramienta</h3>
+                        <p>Esta página permite probar ambos modos de ingreso derivado:</p>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li><strong>ACTIVO:</strong> Tu sistema envía usuarios a otros sistemas</li>
+                            <li><strong>PASIVO:</strong> Tu sistema recibe usuarios de otros sistemas</li>
+                        </ul>
+                    </div>
+
+                    <div class="grid">
+                        <div class="card">
+                            <h3>🚀 Modo ACTIVO</h3>
+                            <p><strong>¿Cuándo usar?</strong> Cuando un usuario en tu sistema quiere acceder a otro sistema de la familia Ledroit.</p>
+                            <p><strong>¿Qué hace?</strong> Obtiene los datos del último ingreso satisfactorio y los envía al sistema destino.</p>
+                            <p><strong>Endpoints estandarizados:</strong></p>
+                            <ul style="margin-left: 20px; margin-top: 10px;">
+                                <li><strong>POST (obligatorio):</strong> <code>/ingreso-derivado</code> ← usar para enviar con formulario</li>
+                                <li><strong>Página de procesamiento (GET):</strong> <code>/ingreso-derivado.html</code> ← muestra resultados si llega por URL</li>
+                            </ul>
+                        </div>
+
+                        <div class="card">
+                            <h3>📥 Modo PASIVO</h3>
+                            <p><strong>¿Cuándo usar?</strong> Para probar cómo tu sistema procesaría una solicitud de ingreso derivado.</p>
+                            <p><strong>¿Qué hace?</strong> Simula la recepción y validación de datos de respuestaLMaster.</p>
+                            <p><strong>Validaciones:</strong> Timestamp, empresas activas, metainformación.</p>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <h3>⚠️ Importante</h3>
+                        <p>Esta es una herramienta de <strong>desarrollo y pruebas</strong>. En producción, los ingresos derivados deben manejarse automáticamente según la documentación oficial.</p>
+                    </div>
+                </div>
+
+                <!-- ÁREA DE LOGS -->
+                <div class="form-group">
+                    <label>📋 Logs de Actividad</label>
+                    <div id="logArea" class="log-area">
+                        <div class="log-entry log-info">[Inicio] Herramienta de prueba cargada correctamente</div>
+                    </div>
+                    <button class="btn secondary" onclick="clearLogs()">🧹 Limpiar Logs</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts al final del body para evitar errores de carga -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    <script src="./assets/firebase-init.js"></script>
+    <script>
+        // Variables globales
+        let currentTab = 'activo';
+        let sessionData = null;
+
+        // Verificar sesión al cargar
+        window.addEventListener('DOMContentLoaded', function() {
+            verificarSesion();
+        });
+
+        function verificarSesion() {
+            // Verificar si hay sesión activa
+            const session = JSON.parse(sessionStorage.getItem('ls_session') || '{}');
+            
+            if (!session.initials || !session.timestamp) {
+                // No hay sesión válida
+                document.getElementById('noSessionAlert').style.display = 'block';
+                document.getElementById('mainContent').style.display = 'none';
+                return false;
+            }
+
+            // Verificar si la sesión no ha expirado (8 horas)
+            const sessionTime = new Date(session.timestamp);
+            const now = new Date();
+            const hoursElapsed = (now - sessionTime) / (1000 * 60 * 60);
+            
+            if (hoursElapsed > 8) {
+                // Sesión expirada
+                sessionStorage.removeItem('ls_session');
+                document.getElementById('noSessionAlert').style.display = 'block';
+                document.getElementById('mainContent').style.display = 'none';
+                log('⚠️ Sesión expirada', 'warning');
+                return false;
+            }
+
+            // Sesión válida
+            sessionData = session;
+            document.getElementById('noSessionAlert').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            
+            cargarInformacionSesion();
+            log('🚀 Herramienta de prueba cargada', 'success');
+            return true;
+        }
+
+        function cargarInformacionSesion() {
+            const sessionInfo = document.getElementById('sessionInfo');
+            
+            if (sessionData && sessionData.initials) {
+                // La sesión tiene la estructura: { initials, user, companies, ledroitMasterResponse }
+                // Pero también podemos acceder a los datos originales desde ledroitMasterResponse
+                const userData = sessionData.user || {};
+                let empresas = sessionData.companies || [];
+                
+                // Si no hay empresas en companies, intentar obtenerlas de ledroitMasterResponse
+                if (empresas.length === 0 && sessionData.ledroitMasterResponse && sessionData.ledroitMasterResponse.data) {
+                    empresas = sessionData.ledroitMasterResponse.data.empresas || [];
+                }
+                
+                const empresasActivas = empresas.filter(emp => emp.empresa_activa && emp.usuario_activo);
+                
+                sessionInfo.innerHTML = `
+                    <strong>👤 Usuario:</strong> ${userData.iniciales || sessionData.initials}<br>
+                    
+                    <strong>⏰ Sesión iniciada:</strong> ${new Date(sessionData.timestamp).toLocaleString()}<br>
+                    <strong>🏢 Empresas totales:</strong> ${empresas.length}<br>
+                    <strong>✅ Empresas activas:</strong> ${empresasActivas.length}<br>
+                    <strong>📋 Empresas:</strong> ${empresasActivas.map(emp => emp.nombre).join(', ') || 'Ninguna activa'}
+                `;
+                 log(`📋 Sesión cargada: ${userData.iniciales || sessionData.initials} (${empresasActivas.length} empresas activas)`, 'info');
+            } else {
+                sessionInfo.innerHTML = '<span style="color: #dc3545;">❌ Error cargando datos de sesión</span>';
+                log('⚠️ Error cargando datos de sesión', 'warning');
+            }
+        }
+
+        // Funciones de navegación
+        function switchTab(tabName) {
+            // Ocultar todas las secciones
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remover clase active de todos los tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Mostrar sección seleccionada
+            document.getElementById(tabName).classList.add('active');
+            
+            // Activar tab seleccionado
+            event.target.classList.add('active');
+            
+            currentTab = tabName;
+            log(`📋 Cambiado a modo: ${tabName.toUpperCase()}`, 'info');
+        }
+
+        // Sistema de toasts
+        function showToast(message, type = 'info', duration = 4000) {
+            const toastContainer = document.getElementById('toastContainer');
+            
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const toastId = 'toast_' + Date.now();
+            toast.id = toastId;
+            
+            const icons = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                info: 'ℹ️'
+            };
+            
+            const titles = {
+                success: 'Éxito',
+                error: 'Error',
+                warning: 'Advertencia',
+                info: 'Información'
+            };
+            
+            toast.innerHTML = `
+                <div class="toast-header">
+                    <span>${icons[type]} ${titles[type]}</span>
+                    <button class="toast-close" onclick="closeToast('${toastId}')">&times;</button>
+                </div>
+                <div class="toast-body">${message}</div>
+                <div class="toast-progress"></div>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Mostrar toast con animación
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 100);
+            
+            // Auto-cerrar después del tiempo especificado
+            setTimeout(() => {
+                closeToast(toastId);
+            }, duration);
+        }
+
+        function closeToast(toastId) {
+            const toast = document.getElementById(toastId);
+            if (toast) {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 300);
+            }
+        }
+
+        // Sistema de logs
+        function log(message, type = 'info') {
+            const logArea = document.getElementById('logArea');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = `log-${type}`;
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${className}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logArea.appendChild(logEntry);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        function clearLogs() {
+            document.getElementById('logArea').innerHTML = '<div class="log-entry log-info">[Inicio] Logs limpiados</div>';
+        }
+
+        // MODO ACTIVO - Funciones
+        async function enviarIngresoDerivado() {
+            log('🚀 Iniciando envío de ingreso derivado...', 'info');
+            
+            try {
+                const urlDestino = document.getElementById('urlDestino').value;
+                const sistemaDestino = document.getElementById('sistemaDestino').value;
+
+                if (!urlDestino) {
+                    log('❌ URL destino requerida', 'error');
+                    return;
+                }
+
+                if (!sistemaDestino) {
+                    log('❌ Nombre del sistema destino requerido', 'error');
+                    return;
+                }
+
+                // Obtener datos de sesión actual
+                const respuestaLMaster = await obtenerDatosParaEnvio(sistemaDestino);
+                if (!respuestaLMaster) {
+                    log('❌ No se pudieron obtener los datos para envío', 'error');
+                    return;
+                }
+
+                log(`📤 Enviando a: ${urlDestino}`, 'info');
+                log(`🎯 Sistema destino: ${sistemaDestino}`, 'info');
+                log(`📋 Método: POST con formulario (Estándar Ledroit)`, 'info');
+
+                enviarPorURL(urlDestino, respuestaLMaster);
+
+                log('✅ Solicitud enviada correctamente', 'success');
+
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function obtenerDatosParaEnvio(sistemaDestino) {
+            if (!sessionData || !sessionData.initials) {
+                throw new Error('No hay sesión activa');
+            }
+
+            // La sesión tiene la estructura: { initials, user, companies, ledroitMasterResponse }
+            const userData = sessionData.user || {};
+            let empresas = sessionData.companies || [];
+            
+            // Si no hay empresas en companies, intentar obtenerlas de ledroitMasterResponse
+            if (empresas.length === 0 && sessionData.ledroitMasterResponse && sessionData.ledroitMasterResponse.data) {
+                empresas = sessionData.ledroitMasterResponse.data.empresas || [];
+            }
+            
+            const empresasActivas = empresas.filter(emp => emp.empresa_activa && emp.usuario_activo);
+
+            if (empresasActivas.length === 0) {
+                throw new Error('No hay empresas activas en la sesión');
+            }
+
+            // Crear respuestaLMaster con datos reales de la sesión (formato compatible con test-ingreso-derivado.html)
+            const respuestaLMaster = {
+                success: true,
+                error: null,
+                data: {
+                    iniciales: userData.iniciales || sessionData.initials,
+                    nombre: userData.nombre || sessionData.initials,
+                    foto_url: (userData.foto_url || '').toString().trim().replace(/^[\s`'"]+/g, '').replace(/[\s`'"]+$/g, '').replace(/`/g, ''),
+                    empresas: empresasActivas.map(emp => ({
+                        nombre: emp.nombre,
+                        empresa_activa: emp.empresa_activa,
+                        usuario_activo: emp.usuario_activo,
+                        rol: emp.rol || ["A1"]
+                    }))
+                },
+                timestamp: new Date().toISOString(),
+                sistemaOrigen: "LEDROITSENDER",
+                empresaSolicitante: empresasActivas[0].nombre
+            };
+
+            log(`📋 Datos obtenidos para: ${userData.iniciales || sessionData.initials}`, 'info');
+            log(`🏢 Empresa solicitante: ${empresasActivas[0].nombre}`, 'info');
+            log(`📊 ${empresasActivas.length} empresas activas incluidas`, 'info');
+            
+            return respuestaLMaster;
+        }
+
+        function generarJSON() {
+            try {
+                obtenerDatosParaEnvio('SISTEMA_DESTINO').then(datos => {
+                    // Crear modal con JSON formateado
+                    const modal = document.createElement('div');
+                    modal.style.cssText = `
+                        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                        background: rgba(0,0,0,0.5); z-index: 1000; display: flex; 
+                        align-items: center; justify-content: center;
+                    `;
+                    
+                    const modalContent = document.createElement('div');
+                    modalContent.style.cssText = `
+                        background: white; border-radius: 10px; padding: 30px; 
+                        max-width: 80%; max-height: 80%; overflow-y: auto;
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                    `;
+                    
+                    // Crear botón de copiar con función separada
+                    const copiarBtn = document.createElement('button');
+                    copiarBtn.textContent = '📋 Copiar JSON';
+                    copiarBtn.style.cssText = 'background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin-right: 10px; cursor: pointer;';
+                    copiarBtn.onclick = () => {
+                        navigator.clipboard.writeText(JSON.stringify(datos)).then(() => {
+                            showToast('JSON copiado al portapapeles', 'success');
+                        }).catch(err => {
+                            console.error('Error copiando:', err);
+                            showToast('Error al copiar JSON', 'error');
+                        });
+                    };
+                    
+                    const cerrarBtn = document.createElement('button');
+                    cerrarBtn.textContent = '❌ Cerrar';
+                    cerrarBtn.style.cssText = 'background: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;';
+                    cerrarBtn.onclick = () => modal.remove();
+                    
+                    modalContent.innerHTML = `
+                        <h3 style="margin-bottom: 20px; color: #667eea;">📋 JSON Generado</h3>
+                        <div style="background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                            <pre style="white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 0.9rem; margin: 0;">${JSON.stringify(datos, null, 2)}</pre>
+                        </div>
+                        <div style="text-align: right;" id="modal-buttons">
+                        </div>
+                    `;
+                    
+                    // Agregar botones al contenedor
+                    const buttonsContainer = modalContent.querySelector('#modal-buttons');
+                    buttonsContainer.appendChild(copiarBtn);
+                    buttonsContainer.appendChild(cerrarBtn);
+                    
+                    modal.className = 'modal-overlay';
+                    modal.appendChild(modalContent);
+                    document.body.appendChild(modal);
+                    
+                    // Cerrar modal al hacer click fuera
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) modal.remove();
+                    });
+                    
+                }).catch(error => {
+                    log(`❌ Error generando JSON: ${error.message}`, 'error');
+                });
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        function enviarPorURL(urlDestino, respuestaLMaster) {
+            // Normalizar destino: si apunta a ingreso-derivado.html ⇒ usar el endpoint /ingreso-derivado
+            let destinoNormalizado = urlDestino;
+            try {
+                const u = new URL(urlDestino, window.location.origin);
+                if (/\/?ingreso-derivado\.html$/i.test(u.pathname)) {
+                    u.pathname = u.pathname.replace(/ingreso-derivado\.html$/i, 'ingreso-derivado');
+                    destinoNormalizado = u.toString();
+                } else {
+                    destinoNormalizado = u.toString();
+                }
+            } catch (e) {
+                destinoNormalizado = urlDestino.replace(/ingreso-derivado\.html$/i, 'ingreso-derivado');
+            }
+
+            // Crear formulario temporal para envío POST
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = destinoNormalizado;
+            form.target = '_blank';
+            form.style.display = 'none';
+            
+            // Crear campo oculto con los datos
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'respuestaLMaster';
+            input.value = JSON.stringify(respuestaLMaster);
+            
+            form.appendChild(input);
+            document.body.appendChild(form);
+            
+            // Enviar formulario
+            form.submit();
+            
+            // Limpiar formulario temporal
+            document.body.removeChild(form);
+            
+            showToast('Usuario enviado correctamente por POST', 'success');
+        }
+
+        function verDatosAEnviar() {
+            const sistemaDestino = document.getElementById('sistemaDestino').value || 'SISTEMA_DESTINO';
+            
+            obtenerDatosParaEnvio(sistemaDestino).then(datos => {
+                log('👁️ Datos que se enviarían:', 'info');
+                log(JSON.stringify(datos, null, 2), 'info');
+            }).catch(error => {
+                log(`❌ Error obteniendo datos: ${error.message}`, 'error');
+            });
+        }
+
+        // MODO PASIVO - Funciones
+        function actualizarTimestamp() {
+            const jsonInput = document.getElementById('jsonInput');
+            
+            if (!jsonInput.value.trim()) {
+                log('❌ No hay JSON para actualizar', 'error');
+                return;
+            }
+            
+            try {
+                const jsonData = JSON.parse(jsonInput.value);
+                jsonData.timestamp = new Date().toISOString();
+                jsonInput.value = JSON.stringify(jsonData, null, 2);
+                log('✅ Timestamp actualizado a: ' + jsonData.timestamp, 'success');
+            } catch (error) {
+                log('❌ Error actualizando timestamp: JSON inválido', 'error');
+            }
+        }
+
+        function testIngresoDerivadoPasivo() {
+            log('🧪 Iniciando prueba de ingreso derivado pasivo...', 'info');
+
+            const jsonInputValue = document.getElementById('jsonInput').value.trim();
+            
+            if (!jsonInputValue) {
+                log('❌ Debes pegar un JSON de prueba primero', 'error');
+                return;
+            }
+
+            try {
+                const respuestaLMaster = JSON.parse(jsonInputValue);
+                
+                log('📥 JSON parseado correctamente', 'success');
+
+                // Validar estructura básica (compatible con ambos formatos)
+                let userData = null;
+                if (respuestaLMaster.RESPUESTALEDROIMASTER && respuestaLMaster.RESPUESTALEDROIMASTER.data) {
+                    // Formato con RESPUESTALEDROIMASTER
+                    userData = respuestaLMaster.RESPUESTALEDROIMASTER.data;
+                } else if (respuestaLMaster.data) {
+                    // Formato directo
+                    userData = respuestaLMaster.data;
+                } else {
+                    log('❌ Estructura de datos incompleta o inválida', 'error');
+                    return;
+                }
+
+                if (!userData.iniciales) {
+                    log('❌ Datos incompletos: falta iniciales', 'error');
+                    return;
+                }
+
+                log(`🔍 Usuario: ${userData.iniciales}`, 'info');
+
+                // Validar timestamp
+                if (respuestaLMaster.timestamp) {
+                    const timestamp = new Date(respuestaLMaster.timestamp);
+                    const ahora = new Date();
+                    const minutosTranscurridos = (ahora - timestamp) / (1000 * 60);
+                    
+                    log(`⏰ Minutos transcurridos: ${minutosTranscurridos.toFixed(2)}`, 'info');
+                    
+                    if (minutosTranscurridos > 15) {
+                        log('❌ Timestamp muy antiguo (>15 minutos)', 'error');
+                        return;
+                    }
+                }
+
+                // Validar empresas
+                const empresas = userData.empresas || [];
+                const tieneEmpresaActiva = empresas.some(emp => emp.empresa_activa && emp.usuario_activo);
+                
+                log(`👤 Empresas encontradas: ${empresas.length}`, 'info');
+                log(`✅ Tiene empresa activa: ${tieneEmpresaActiva}`, tieneEmpresaActiva ? 'success' : 'error');
+
+                if (!tieneEmpresaActiva) {
+                    log('❌ No tiene empresas activas', 'error');
+                    return;
+                }
+
+                // Validar metainformación
+                const metaInfo = {
+                    sistemaActivo: respuestaLMaster.sistemaActivo || respuestaLMaster.sistemaOrigen || 'SISTEMA_DESCONOCIDO',
+                    timestamp: respuestaLMaster.timestamp,
+                    iniciales: userData.iniciales
+                };
+
+                log(`🔍 Sistema origen: ${metaInfo.sistemaActivo}`, 'info');
+                log(`📋 Metainformación válida: ✅`, 'success');
+
+                log('✅ Todas las validaciones pasaron', 'success');
+                log('🎉 El ingreso derivado sería EXITOSO', 'success');
+
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        function enviarAIngresoDerivado() {
+            log('📤 Enviando al endpoint /ingreso-derivado (POST)...', 'info');
+
+            const jsonInputValue = document.getElementById('jsonInput').value.trim();
+            
+            if (!jsonInputValue) {
+                log('❌ Debes pegar un JSON de prueba primero', 'error');
+                return;
+            }
+
+            try {
+                const respuestaLMaster = JSON.parse(jsonInputValue);
+                
+                // Log en la página de actividad
+                log('ENVÍO PASIVO - Enviando datos al endpoint /ingreso-derivado por POST', 'info');
+                log(`ENVÍO PASIVO - Datos enviados: ${JSON.stringify(respuestaLMaster).substring(0, 200)}...`, 'info');
+                
+                // Crear formulario temporal para envío POST
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = 'ingreso-derivado';
+                form.target = '_blank';
+                form.style.display = 'none';
+                
+                // Crear campo oculto con los datos
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'respuestaLMaster';
+                input.value = JSON.stringify(respuestaLMaster);
+                
+                form.appendChild(input);
+                document.body.appendChild(form);
+                
+                // Log del método utilizado
+                log('ENVÍO PASIVO - Método POST con formulario utilizado (endpoint /ingreso-derivado)', 'info');
+                
+                // Enviar formulario
+                form.submit();
+                
+                // Limpiar formulario temporal
+                document.body.removeChild(form);
+                
+                showToast('Datos enviados al endpoint /ingreso-derivado por POST', 'success');
+                log('ENVÍO PASIVO - Formulario enviado exitosamente', 'success');
+
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

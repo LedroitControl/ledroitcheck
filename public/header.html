@@ -1,0 +1,28 @@
+<header class="lc-header" role="banner">
+  <div class="lc-container">
+    <nav class="lc-nav" aria-label="Header">
+      <div class="lc-brand">
+        <!-- Clock SVG logo (green theme) -->
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="10" fill="#e8f5e9" stroke="#1b5e20" stroke-width="1.5"></circle>
+          <circle cx="12" cy="12" r="1.8" fill="#1b5e20"></circle>
+          <!-- hour hand -->
+          <path d="M12 12 L12 7" stroke="#2e7d32" stroke-width="2.2" stroke-linecap="round"></path>
+          <!-- minute hand -->
+          <path d="M12 12 L16 12" stroke="#66bb6a" stroke-width="2" stroke-linecap="round"></path>
+        </svg>
+        <span>LEDROITCHECK</span>
+      </div>
+
+      <div class="lc-actions">
+        <select id="companySelect" aria-label="Empresa activa" style="display:none"></select>
+        <button class="btn ghost" id="btnHome" onclick="location.href='index.html'">Inicio</button>
+        <div class="lc-user" id="lc-user-area" aria-label="Usuario actual">
+          <span class="avatar" id="avatar">LC</span>
+          <img id="avatarImg" alt="Foto usuario" style="width:28px;height:28px;border-radius:50%;display:none" />
+          <span id="userName" class="muted">Usuario</span>
+        </div>
+      </div>
+    </nav>
+  </div>
+</header>

@@ -1,0 +1,92 @@
+/* Main styles for LedroitCheck Phase 1 (green theme) */
+
+:root {
+  --primary: #2e7d32; /* green 700 */
+  --primary-dark: #1b5e20;
+  --primary-light: #66bb6a;
+  --bg: #f5f7f6;
+  --text: #1f2937;
+  --muted: #64748b;
+  --border: #e5e7eb;
+  --toast-bg: #333;
+  --success: #22c55e;
+  --error: #ef4444;
+  --warning: #f59e0b;
+  --info: #3b82f6;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; color: var(--text); background: var(--bg); }
+
+/* Header */
+.lc-header { position: sticky; top: 0; z-index: 50; background: linear-gradient(0deg, var(--primary) 0%, var(--primary-dark) 100%); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.lc-container { max-width: 1060px; margin: 0 auto; padding: 0 16px; }
+.lc-nav { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; }
+.lc-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: .3px; }
+.lc-brand svg { width: 28px; height: 28px; }
+.lc-actions { display: flex; align-items: center; gap: 12px; }
+.lc-user { display: flex; align-items: center; gap: 8px; }
+.lc-user .avatar { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,.2); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
+select#companySelect { padding: 6px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,.6); background: rgba(255,255,255,.15); color: #fff; }
+select#companySelect option { color: #111; }
+
+/* Layout */
+.page { max-width: 960px; margin: 24px auto; padding: 0 16px; }
+.card { background: #fff; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,.04); padding: 16px; }
+.card h2 { margin: 0 0 12px; font-size: 18px; }
+.row { display: flex; gap: 16px; }
+.col { flex: 1; }
+.muted { color: var(--muted); }
+
+/* Form */
+.form { display: grid; gap: 12px; }
+.field { display: grid; gap: 6px; }
+label { font-size: 13px; color: var(--muted); }
+input[type="text"], input[type="url"], textarea, select, button { font-size: 14px; }
+input[type="text"], input[type="url"], textarea, select { padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; transition: border .2s; background: #fff; }
+input[type="text"]:focus, input[type="url"]:focus, textarea:focus, select:focus { border-color: var(--primary-light); }
+.actions { display: flex; gap: 10px; align-items: center; }
+.btn { padding: 10px 14px; border-radius: 8px; border: 1px solid transparent; cursor: pointer; background: var(--primary); color: #fff; font-weight: 600; }
+.btn.secondary { background: #fff; color: var(--primary); border-color: var(--primary); }
+.btn.ghost { background: transparent; color: #fff; border-color: rgba(255,255,255,.4); }
+.helper { font-size: 12px; color: var(--muted); }
+
+/* Tabs (for pruebas) */
+.tabs { display: flex; gap: 8px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+.tab { padding: 8px 12px; border-radius: 8px 8px 0 0; cursor: pointer; background: #f8fafc; border: 1px solid var(--border); border-bottom: none; }
+.tab.active { background: #fff; color: var(--primary-dark); font-weight: 600; }
+.tabpanel { display: none; }
+.tabpanel.active { display: block; }
+
+/* Toasts */
+.toast { position: fixed; top: 16px; right: 16px; background: var(--toast-bg); color: #fff; border-radius: 10px; padding: 10px 14px; min-width: 220px; box-shadow: 0 10px 30px rgba(0,0,0,.15); opacity: 0; transform: translateY(-10px); transition: opacity .2s, transform .2s; z-index: 9999; }
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast-success { background: var(--success); }
+.toast-error { background: var(--error); }
+.toast-warning { background: var(--warning); color: #111; }
+.toast-info { background: var(--info); }
+.toast .toast-content { display: flex; align-items: center; gap: 8px; }
+
+/* Modal (simple) */
+.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; align-items: center; justify-content: center; z-index: 9998; }
+.modal-backdrop.show { display: flex; }
+.modal { background: #fff; border-radius: 12px; padding: 16px; width: min(540px, 92vw); box-shadow: 0 14px 40px rgba(0,0,0,.24); }
+.modal h3 { margin: 0 0 8px; }
+.modal .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px; }
+
+/* Masking claBComun without type=password */
+.masked { -webkit-text-security: disc; }
+
+/* Login page professional layout */
+.login-wrapper { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.login-card { width: min(440px, 96vw); padding: 24px; }
+.login-logo { display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+.login-logo svg { width: 64px; height: 64px; }
+.login-title { text-align: center; margin: 6px 0 18px; }
+
+.input-with-toggle { position: relative; }
+.input-with-toggle input { width: 100%; padding-right: 40px; }
+.input-with-toggle .toggle-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); border: 1px solid var(--border); background: #f8fafc; color: var(--text); padding: 6px 8px; border-radius: 6px; cursor: pointer; }
+
+/* Code block */
+pre { background: #0b1020; color: #cce3ff; padding: 12px; border-radius: 10px; overflow: auto; border: 1px solid #1f2937; }

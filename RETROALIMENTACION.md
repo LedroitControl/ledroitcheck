@@ -244,3 +244,139 @@ He identificado y comprendido todos los aspectos críticos:
 *Retroalimentación generada: Enero 2025*  
 *Estado: ✅ ANÁLISIS COMPLETO - LISTO PARA IMPLEMENTACIÓN*  
 *Basado en: DOCUMENTACION - API_LEDROITMASTER.md y GUIA PARA DESARROLLADORES DE SISTEMAS SECUNDARIOS.md*
+# Retroalimentación y Plan de Implementación (Iterativo por Fases)
+
+Este documento concentrará: preguntas, opciones a decidir, propuesta de fases, criterios de aceptación y decisiones pendientes. Usted podrá responder directamente aquí. Cada elemento aprobado será trasladado a "LO_CLARO.md".
+
+---
+
+## Objetivo inmediato
+Implementar lo básico del sistema conforme a la documentación: login (primer ingreso), header estándar, página de pruebas de ingreso derivado y gadget inicial; siguiendo su proceso de aprobación por fases.
+
+---
+
+## Propuesta de Fases
+
+Fase 1 — Aprobaciones y estructura mínima (sin lógica de API)
+- Crear estructura básica de archivos (sin conectar aún a APIs):
+  - /public/login.html (formulario, normalización de iniciales, UI de toasts)
+  - /public/header.html y/o módulo JS para header reutilizable
+  - /public/prueba-ingderivado.html (herramienta de pruebas de envío)
+  - /public/ingreso-derivado.html (pantalla de recepción y visualización)
+- Definir y aprobar opciones clave (persistencia de sesión, endpoints, nombres, estilo visual).
+- Criterios de aceptación F1:
+  - Las cuatro páginas existen y se ven correctamente en Hosting.
+  - No hay llamadas a API todavía; solo UI y navegación básica.
+  - Sistema de notificaciones tipo toast activo (sin usar alert()).
+
+Fase 2 — Primer Ingreso (login) conectado a API
+- Implementar POST a endpoint de autenticación (Cloud Run recomendado).
+- Crear ls_session según estándar y guardar según opción aprobada (sessionStorage vs localStorage).
+- Implementar fallback opcional a Firestore en colección "ultimosIngresosSatisfactorios".
+- Criterios de aceptación F2:
+  - Login funcional con validación y creación de ls_session.
+  - Iniciales se normalizan (solo letras a mayúsculas) antes de enviar.
+  - Mensajería de error/success vía toasts.
+
+Fase 3 — Header y Gadget
+- Header estandarizado: branding, usuario, empresa activa (selector si aplica).
+- Gadget inicial (según alcance): opciones de envío activo a otros sistemas.
+- Criterios de aceptación F3:
+  - Header muestra nombre, iniciales y empresa activa.
+  - Gadget permite enviar usuario por POST a destino(s) configurados.
+
+Fase 4 — Ingreso Derivado PASIVO
+- Endpoint POST /ingreso-derivado (Firebase Functions) con rewrite desde Hosting.
+- Procesar respuestaLMaster, crear ls_session derivada, auditar evento.
+- Criterios de aceptación F4:
+  - Recepción por POST funcional en /ingreso-derivado.
+  - /ingreso-derivado.html muestra resultados y limpia parámetros de URL.
+
+Fase 5 — QA y despliegue estable
+- Pruebas integrales, documentación breve de uso, ajustes finales.
+
+---
+
+## Preguntas para su aprobación (responda aquí)
+
+1) Persistencia de sesión local
+- ¿Prefiere Alta Seguridad (sessionStorage) o Baja/Media Seguridad (localStorage)?
+- Nota: sessionStorage borra datos al cerrar pestaña; localStorage persiste hasta borrado.
+R.- LOCALSTORAGE
+
+2) Nombre del sistemaOrigen
+- ¿Confirmamos "LEDROITCHECK" como valor estándar para sistemaOrigen en todas las llamadas y registros?
+R.- SI. ES "LEDROITCHECK"
+
+3) Endpoints a usar
+- ¿Aprueba utilizar Cloud Run (recomendado en documentación)?:
+  - Autenticación: https://authlogin-fmunxt6pjq-uc.a.run.app
+  - Auditoría ingreso derivado: https://auditingresoderivado-fmunxt6pjq-uc.a.run.app
+- Alternativa: Firebase Functions (menos recomendado). ¿Cuál seleccionamos?
+R.- USA CLOUD RON
+
+4) Implementación del endpoint POST /ingreso-derivado
+- ¿Aprueba crear una Cloud Function llamada "ingresoDerivado" y un rewrite en firebase.json para manejar POST en /ingreso-derivado?
+R.- SI.
+
+5) Header — Lineamientos visuales
+- ¿Colores/tema preferido? (Ej.: primario #1E88E5; fondo claro) R.- UTILIZA TONOS VERDES
+- ¿Logo disponible para LEDROITCHECK? (URL o archivo) R.- ME GUSTARÍA QUE TU HAGAS UNO EN SVG
+- ¿Elementos obligatorios?:
+  - Marca del sistema (izquierda) R.- SI. 
+  - Selector de empresa activa (centro) — ¿lo habilitamos desde F3? R.- NO SÉ A QUE TE REFIERES CON F3. 
+  - Usuario (iniciales, nombre, foto) y menú (derecha). R.- SI.
+
+  R.- EN TERMINOS GENERALES, QUIERO QUE TE APEGUES A LA MUESTRA QUE ESTÁ EN LA GUIA
+
+6) Gadget — Alcance inicial
+- ¿Qué destinos desea habilitar desde el gadget (URLs exactas de otros sistemas)? R.- DEBE ESTAR VACÍO, PARA QUE EL USUARIO REGISTRE NUEVOS.
+- ¿Abrir en nueva ventana o misma? (POST target _blank vs _self). R.- DEBE TENER LA OPCIÓN PARA QUE EL USUARIO LO ELIJA AL MOMENTO DE CREAR. 
+- ¿Texto del botón principal y layout simple deseado? 
+R.- CREO QUE ME ESTÁS HACIENDO PREGUNTAS QUE NO DEBERÍAS: EL GADGET NO DEBE VARIAR ENTRE SISTEMA Y SISTEMA. DEBES APEGARTE AL PIE DE LA LETRA A LA GUIA.
+
+7) Página de Pruebas — prueba-ingderivado.html
+- ¿Destino por defecto para pruebas? (URL completa) R.- NO HAY. EL USUARIO LA DEBE PONER
+- ¿Requiere campos extra además de respuestaLMaster (JSON) y urlDestino? 
+R.- CREO QUE ME ESTÁS HACIENDO PREGUNTAS QUE NO DEBERÍAS: LA PAGINA DE PRUEBAS NO DEBE VARIAR ENTRE SISTEMA Y SISTEMA. DEBES APEGARTE AL PIE DE LA LETRA A LA GUIA. 
+
+8) Firestore — Respaldo "ultimosIngresosSatisfactorios"
+- ¿Desea habilitarlo en F2 (fallback cuando API no responde)?
+- ¿Podemos crear la colección y escribir documentos con ID = iniciales?
+R.- ESTO NO ES OPCIONAL... DEBES APEGARTE A LA GUIA, PUES ESTO ES CRÍTICO!!!
+
+9) Mensajería y lenguaje
+- ¿Confirmamos uso de toasts (sin alert) y lenguaje español en toda la UI?
+R.- SI. CLARO. SALVO LAS COSAS QUE REQUIERAN LA RESPUESTA DEL USUARIO: USAR MODALS
+
+10) Login — Etiquetas y campos
+- ¿Etiquetamos "Iniciales" y "Clave común (claBComun)"? (La documentación sugiere no llamarla "contraseña" para evitar guardado del navegador.) R.- SÍ. ESTO NO ES OPCIONAL. APEGATE A LA GUIA
+- ¿Desea incluir empresaSolicitante en login (opcional) o lo resolvemos vía selector posterior? R.- EN ESTE SISTEMA, TODOS PODRÁN ENTRAR SIEMPRE Y CUANDO LO AUTORICE LEDROITMASTER. NO HABRÁ SEGUNDA CAPA DE FILTRADO
+
+11) Auditoría PASIVO
+- ¿Aprobamos registrar auditoría al recibir ingreso derivado (resultado EXITOSO/FALLIDO) vía endpoint de Cloud Run? R.- ESTO NO ES OPCIONAL!!! DEBES APEGARTE A LA DOCUMENTACIÓN
+
+12) Seguridad adicional
+- ¿Desea capturar dirección IP del cliente para auditoría cuando esté disponible?
+R.- SÍ. SIEMPRE
+
+13) Despliegue continuo
+- ¿Prefiere despliegue manual por ahora (firebase deploy) o activamos GitHub Actions en una fase posterior?
+R.- USA EL DESPLIEGUE MANUAL
+---
+
+## Decisiones pendientes (se actualizarán con sus respuestas)
+- Persistencia de sesión: [Pendiente]
+- sistemaOrigen: [Pendiente]
+- Endpoints a usar: [Pendiente]
+- Endpoint /ingreso-derivado (Function + rewrite): [Pendiente]
+- Lineamientos visuales de Header: [Pendiente]
+- Destinos del Gadget: [Pendiente]
+- Configuración Firestore (respaldo): [Pendiente]
+- Auditoría PASIVO: [Pendiente]
+- Despliegue continuo: [Pendiente]
+
+---
+
+## Próximo paso
+Una vez responda y apruebe Fase 1 (estructura y definiciones), procederé a implementar la estructura mínima de páginas y componentes sin conexiones a API, y le mostraré la vista previa en Hosting para su validación antes de avanzar.

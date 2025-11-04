@@ -5,14 +5,12 @@
 
 // Configuración de Firebase (se debe actualizar con los datos reales del proyecto)
 const firebaseConfig = {
-    // NOTA: Estos valores se deben obtener de la consola de Firebase
-    // y actualizar antes del deploy
-    apiKey: "your-api-key",
+    apiKey: "AIzaSyBI8wP7mGBKmK0Gej_4irGR_HgwK0gvO6",
     authDomain: "ledroitcheck.firebaseapp.com",
     projectId: "ledroitcheck",
-    storageBucket: "ledroitcheck.appspot.com",
-    messagingSenderId: "your-sender-id",
-    appId: "your-app-id"
+    storageBucket: "ledroitcheck.firebasestorage.app",
+    messagingSenderId: "262599097567",
+    appId: "1:262599097567:web:81f272f7b1cd5c6be33d6a"
 };
 
 // Inicializar Firebase
@@ -20,10 +18,15 @@ let db;
 try {
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
+    // Exponer para el header global (documentación HEADER)
+    window.db = db;
+    // Algunos headers esperan authReady; aquí resolvemos inmediatamente
+    if (!window.authReady) {
+        window.authReady = Promise.resolve();
+    }
     console.log('Firebase inicializado correctamente');
 } catch (error) {
     console.error('Error al inicializar Firebase:', error);
-    showError('Error de configuración de base de datos');
 }
 
 /**
@@ -74,7 +77,6 @@ class FirestoreManager {
 
         } catch (error) {
             console.error('Error al guardar ingreso satisfactorio:', error);
-            showError('Error al guardar datos de sesión');
             return false;
         }
     }
@@ -130,7 +132,7 @@ class FirestoreManager {
             const documento = {
                 ...registro,
                 timestamp: new Date().toISOString(),
-                usuario: sessionManager.getUser()?.iniciales || 'SISTEMA'
+                usuario: registro?.iniciales || 'SISTEMA'
             };
 
             await this.db.collection('entradas_salidas').add(documento);
@@ -140,7 +142,6 @@ class FirestoreManager {
 
         } catch (error) {
             console.error('Error al guardar registro de personal:', error);
-            showError('Error al guardar registro');
             return false;
         }
     }
