@@ -10,6 +10,8 @@
 const {setGlobalOptions} = require("firebase-functions");
 const {onRequest} = require("firebase-functions/https");
 const logger = require("firebase-functions/logger");
+const admin = require("firebase-admin");
+try { admin.initializeApp(); } catch (e) { /* already initialized */ }
 
 // For cost control, you can set the maximum number of containers that can be
 // running at the same time. This helps mitigate the impact of unexpected
@@ -26,7 +28,121 @@ setGlobalOptions({ maxInstances: 10 });
 // Create and deploy your first functions
 // https://firebase.google.com/docs/functions/get-started
 
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+/**
+ * Ingreso Derivado PASIVO (POST)
+ * Endpoint que recibe los datos enviados por sistemas secundarios (gadget) y
+ * setea la sesión en el navegador, guarda respaldo en Firestore y audita.
+ *
+ * Ruta de Hosting: /ingreso-derivado (configurada en firebase.json)
+ */
+exports.ingresoDerivado = onRequest({ maxInstances: 10 }, async (req, res) => {
+  // CORS básico para permitir llamadas cross-origin del gadget
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  if (req.method === "OPTIONS") {
+    return res.status(204).send("");
+  }
+
+  if (req.method !== "POST") {
+    return res.status(405).set("Allow", "POST").send("Método no permitido. Use POST.");
+  }
+
+  try {
+    // Extraer payload de forma flexible
+    let payload = null;
+    if (req.body && typeof req.body === "object") {
+      payload = req.body.respuestaLMaster ?? req.body.data ?? req.body;
+    } else if (typeof req.body === "string") {
+      try { payload = JSON.parse(req.body); } catch {}
+    }
+
+    if (typeof payload === "string") {
+      try { payload = JSON.parse(payload); } catch {}
+    }
+
+    if (!payload || typeof payload !== "object") {
+      return res.status(400).send("Body inválido: se esperaba JSON en 'respuestaLMaster' o 'data'.");
+    }
+
+    const respuesta = payload;
+    const ok = !!respuesta.success && !!respuesta.data;
+    if (!ok) {
+      return res.status(400).send("Estructura inválida: { success: true, data: { ... } } requerida.");
+    }
+
+    const data = respuesta.data || {};
+    const ses = {
+      usuario: data.nombre || data.usuario || (data.user && data.user.nombre) || null,
+      iniciales: data.iniciales || data.initials || (data.user && data.user.iniciales) || null,
+      // Compatibilidad: incluir ambas claves para el avatar según la guía
+      foto_url: data.foto_url || data.avatar || null,
+      avatar: data.foto_url || data.avatar || null,
+      empresas: Array.isArray(data.empresas) ? data.empresas : [],
+    };
+
+    // Guardar respaldo en Firestore (colección ya usada en front)
+    try {
+      const db = admin.firestore();
+      const idDoc = ses.iniciales || "sin_iniciales";
+      await db.collection("ultimosIngresosSatisfactorios").doc(idDoc).set({
+        respuestaLMaster: respuesta,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      logger.info("Respaldo de ingreso derivado guardado", { idDoc, empresas: ses.empresas.length });
+    } catch (err) {
+      logger.error("Error guardando respaldo en Firestore", err);
+    }
+
+    // Auditoría (best-effort)
+    try {
+      const auditUrl = "https://auditingresoderivado-fmunxt6pjq-uc.a.run.app";
+      const body = {
+        sistema: "LedroitCheck",
+        iniciales: ses.iniciales || null,
+        empresasCount: ses.empresas.length,
+        success: !!respuesta.success,
+        ts: Date.now(),
+      };
+      await fetch(auditUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      logger.info("Auditoría enviada");
+    } catch (err) {
+      logger.warn("Auditoría fallida (continuando)", err);
+    }
+
+    // Responder con una página HTML que establece la sesión, guarda el payload
+    // completo y redirige al menú principal
+    const html = `<!doctype html>
+      <html lang="es">
+      <head><meta charset="utf-8"><title>Ingreso derivado</title></head>
+      <body>
+        <p>Procesando ingreso derivado…</p>
+        <script>
+          try {
+            const ses = ${JSON.stringify(ses)};
+            const resp = ${JSON.stringify(respuesta)};
+            localStorage.setItem('ls_session', JSON.stringify(ses));
+            sessionStorage.setItem('ls_session', JSON.stringify(ses));
+            // Guardar el payload completo para que ingreso-derivado.html pueda mostrarlo
+            localStorage.setItem('ls_lastRespuestaLMaster', JSON.stringify(resp));
+            sessionStorage.setItem('ls_lastRespuestaLMaster', JSON.stringify(resp));
+            if (ses.iniciales) sessionStorage.setItem('iniciales', ses.iniciales);
+            // Gadget necesita userEmpresas en sessionStorage según la guía
+            try {
+              const empresas = (resp && resp.data && Array.isArray(resp.data.empresas)) ? resp.data.empresas : (ses.empresas || []);
+              sessionStorage.setItem('userEmpresas', JSON.stringify(empresas));
+            } catch (e) {}
+          } catch (e) {}
+          // Redirigir directamente al menú principal
+          location.href = '/menu.html';
+        </script>
+      </body></html>`;
+
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    return res.status(200).send(html);
+  } catch (error) {
+    logger.error("Error en ingreso derivado", error);
+    return res.status(500).send("Error interno procesando ingreso derivado");
+  }
+});

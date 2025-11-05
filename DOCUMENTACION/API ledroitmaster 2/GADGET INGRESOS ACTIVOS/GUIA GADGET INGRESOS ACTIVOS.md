@@ -17,6 +17,17 @@ El **Gadget de Ingresos Activos** es un widget flotante que permite a los usuari
 - **Animaciones suaves** con cubic-bezier y diseño consistente
 - **Notificaciones toast** para feedback del usuario
 
+### Comportamiento de "Abrir en nueva ventana" y cierre de sesión
+
+El gadget permite elegir si el sistema pasivo se abre en una nueva pestaña/ventana o en la misma ventana. Esta preferencia afecta la sesión del sistema actual:
+
+- Activado: se abre en una nueva pestaña y no se cierra la sesión actual.
+- Desactivado: se abre en la misma ventana y se cierra la sesión de este sistema justo después de enviar los datos.
+
+Notas de implementación:
+- El valor `abrirNuevaVentana` se guarda y se respeta al cargar los sistemas desde Firestore/localStorage.
+- El cierre de sesión se realiza mediante `window.SessionManager.logout(false)` si está disponible; de lo contrario, se limpian las claves `ledroitAuth` y `ls_session` en sessionStorage/localStorage.
+
 ## PÁGINAS DONDE SE IMPLEMENTA
 
 El gadget **SOLO** aparece las paginas que indique el propietario (depes preguntarle):

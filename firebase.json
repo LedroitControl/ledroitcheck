@@ -24,18 +24,32 @@
     ],
     "rewrites": [
       {
+        "source": "/ingreso-derivado",
+        "function": {
+          "functionId": "ingresoDerivado",
+          "codebase": "default"
+        }
+      },
+      {
         "source": "**",
-        "destination": "/index.html"
+        "destination": "/menu.html"
       }
     ],
     "headers": [
       {
+        "source": "**/*.html",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+          { "key": "Pragma", "value": "no-cache" },
+          { "key": "Expires", "value": "0" }
+        ]
+      },
+      {
         "source": "**/*.@(js|css)",
         "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "max-age=31536000"
-          }
+          { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+          { "key": "Pragma", "value": "no-cache" },
+          { "key": "Expires", "value": "0" }
         ]
       }
     ]

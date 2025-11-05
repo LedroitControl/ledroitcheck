@@ -5,16 +5,69 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Menú — LEDROITCHECK</title>
   <link rel="stylesheet" href="css/main.css" />
+  <link rel="icon" type="image/svg+xml" href="assets/logo-ledroitcheck.svg" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <!-- Header global desde documentación -->
   <link rel="stylesheet" href="assets/global-header.css" />
-  <script src="assets/global-header.js"></script>
+  <!-- SDK Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script>
+    // Carga secuencial con versión estable desde version.json
+    (function(){
+      function appendVersion(url, v){
+        return url + (url.indexOf('?') === -1 ? ('?v=' + v) : ('&v=' + v));
+      }
+      function loadScript(src, cb){
+        var s = document.createElement('script');
+        s.src = src;
+        s.onload = function(){ cb && cb(); };
+        document.head.appendChild(s);
+      }
+      fetch('version.json?v=' + Date.now())
+        .then(function(r){ return r.ok ? r.json() : { version: Date.now().toString() }; })
+        .then(function(info){
+          var v = info.version || info.build || Date.now().toString();
+          // Actualizar hojas de estilo con versión
+          var links = document.querySelectorAll('link[rel="stylesheet"]');
+          links.forEach(function(link){
+            if (/\b(main\.css|global-header\.css)\b/.test(link.getAttribute('href'))){
+              link.href = appendVersion(link.href, v);
+            }
+          });
+          // Cargar scripts de la app con versión
+          loadScript(appendVersion('firebase-config.js', v), function(){
+            loadScript(appendVersion('assets/global-header.js', v), function(){
+              loadScript(appendVersion('assets/session-manager.js', v), function(){
+                loadScript(appendVersion('js/ingresos-activos.js', v));
+              });
+            });
+          });
+          // Mostrar badge de versión
+          var el = document.getElementById('versionBadge');
+          if (el) { el.textContent = 'Versión del sitio: ' + 'version' + v; }
+        })
+        .catch(function(){
+          // Si falla, cargar sin versión
+          loadScript('firebase-config.js', function(){
+            loadScript('assets/global-header.js', function(){
+              loadScript('assets/session-manager.js', function(){
+                loadScript('js/ingresos-activos.js');
+              });
+            });
+          });
+        });
+    })();
+  </script>
 </head>
 <body>
   <script>
     // Guardia de sesión: si no hay sesión, ir a login
     (function(){
       try{
-        const s = sessionStorage.getItem('ls_session') || localStorage.getItem('ls_session');
+        const s = sessionStorage.getItem('ls_session');
         const ses = s ? JSON.parse(s) : null;
         if (!ses || !ses.iniciales) {
           window.location.replace('login.html');
@@ -26,18 +79,17 @@
     <section class="card">
       <h2>Menú Principal</h2>
       <p class="muted">Sesión activa y accesos iniciales.</p>
+      <div id="versionBadge" class="muted" style="font-size:12px;margin-bottom:8px"></div>
       <div id="userInfo" class="row"></div>
       <div class="actions">
         <a class="btn" href="prueba-ingderivado.html">Página de Pruebas</a>
-        <a class="btn secondary" href="ingreso-derivado.html">Procesamiento (GET)</a>
-        <a class="btn secondary" href="index.html">Inicio</a>
       </div>
     </section>
   </main>
 
   <script type="module">
     try {
-      const s = sessionStorage.getItem('ls_session') || localStorage.getItem('ls_session');
+      const s = sessionStorage.getItem('ls_session');
       const ses = s ? JSON.parse(s) : null;
       const $userInfo = document.getElementById('userInfo');
       if (ses) {
@@ -46,19 +98,36 @@
             <strong>Iniciales:</strong> ${ses.iniciales || ''}
           </div>
           <div class="col">
-            <strong>Nombre:</strong> ${ses.nombre || ''}
+            <strong>Nombre:</strong> ${ses.usuario || ses.nombre || ''}
           </div>
           <div class="col">
             <strong>Empresa activa:</strong> ${ses.empresa_activa || '(no definida)'}
           </div>
         `;
-        // Notificar al header global si aún no está
-        window.ledroitAuth = { user: { nombre: ses.nombre, foto_url: ses.foto_url, empresas: ses.empresas }, iniciales: ses.iniciales };
+        // Notificar al header global con estructura esperada por la guía
+        window.ledroitAuth = {
+          user: {
+            nombre: ses.usuario || ses.nombre || '',
+            foto_url: ses.foto_url || ses.avatar || null,
+            empresas: ses.empresas || []
+          },
+          iniciales: ses.iniciales || ''
+        };
         window.dispatchEvent(new CustomEvent('sessionChanged', { detail: window.ledroitAuth }));
+        // Guardar sesión en sessionStorage para compatibilidad del gadget
+        try {
+          sessionStorage.setItem('ledroitAuth', JSON.stringify(window.ledroitAuth));
+        } catch (e) {}
+        // Asegurar que el gadget tenga userEmpresas en sessionStorage
+        try {
+          const empresas = Array.isArray(ses.empresas) ? ses.empresas : [];
+          sessionStorage.setItem('userEmpresas', JSON.stringify(empresas));
+        } catch (e) { console.warn('No se pudo setear userEmpresas'); }
       } else {
         $userInfo.innerHTML = '<p class="muted">No hay sesión activa. <a href="login.html">Ingresar</a></p>';
       }
     } catch (e) { console.warn('No se pudo leer ls_session:', e); }
   </script>
+  <!-- La versión se establece en el script de carga secuencial arriba -->
 </body>
 </html>

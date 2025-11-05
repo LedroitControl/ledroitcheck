@@ -129,6 +129,36 @@ localStorage.setItem('ls_session', JSON.stringify(sessionData));
 - **sessionStorage:** Más seguro, datos se borran al cerrar pestaña
 - **localStorage:** Más conveniente, datos persisten hasta borrado manual
 
+#### 🔀 Comportamiento de apertura y cierre de sesión (Gadget Ingresos Activos)
+
+El gadget incluye la opción "Abrir en nueva ventana" que determina qué sucede con la sesión del sistema actual cuando se envía al usuario a un sistema pasivo:
+
+- Si "Abrir en nueva ventana" está activado: el sistema pasivo se abre en una nueva pestaña/ventana y la sesión del sistema actual permanece abierta.
+- Si "Abrir en nueva ventana" está desactivado: el sistema pasivo se abre en la misma ventana y la sesión del sistema actual se cierra inmediatamente después del envío.
+
+Implementación recomendada al enviar por POST:
+
+```javascript
+// Dentro de la función de envío por POST
+form.submit();
+document.body.removeChild(form);
+
+// Cerrar sesión del sistema actual solo si NO se abre en nueva ventana
+if (!abrirNuevaVentana) {
+  if (window.SessionManager?.logout) {
+    window.SessionManager.logout(false); // sin redirección porque se navegará al sistema pasivo
+  } else {
+    // Fallback
+    sessionStorage.removeItem('ledroitAuth');
+    sessionStorage.removeItem('ls_session');
+    localStorage.removeItem('ledroitAuth');
+    localStorage.removeItem('ls_session');
+  }
+}
+```
+
+Asegúrate también de persistir el valor de `abrirNuevaVentana` en tu configuración de sistemas (Firestore y/o localStorage) para respetar la preferencia del usuario en accesos futuros.
+
 ### 📡 **MÉTODO DE TRANSFERENCIA**
 **ESTADO ACTUAL:** Los sistemas ahora usan método POST como estándar.
 **COMPATIBILIDAD:** Se mantiene soporte para GET solo para sistemas antiguos.

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Logo SVG — Ledroitsender (Sistema de envío)
+  Portable, liviano y en tonos verdes para integrarse con el header.
+  Tamaño recomendado para favicon: 32x32 o 48x48. ViewBox adaptable.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <!-- Fondo circular suave -->
+  <circle cx="24" cy="24" r="22" fill="#E8F5E9" stroke="#1B5E20" stroke-width="1.5" />
+  <!-- Sobre (representa envío) -->
+  <g transform="translate(10,12)">
+    <rect x="0" y="6" width="28" height="18" rx="3" fill="#A7F3D0" stroke="#10B981" stroke-width="1.5" />
+    <!-- solapa -->
+    <path d="M0 6 L14 16 L28 6" fill="#34D399" stroke="#10B981" stroke-width="1.5" />
+    <!-- líneas de detalle -->
+    <path d="M4 24 L12 18" stroke="#059669" stroke-width="1.5" stroke-linecap="round" />
+    <path d="M24 24 L16 18" stroke="#059669" stroke-width="1.5" stroke-linecap="round" />
+  </g>
+  <!-- Marca pequeña: flecha de avance (envío) -->
+  <path d="M28 14 L34 20 L28 26" fill="none" stroke="#2E7D32" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+  <!-- Punto central decorativo -->
+  <circle cx="24" cy="24" r="2" fill="#1B5E20" />
+  <title>Ledroitsender — Sistema de envío</title>
+</svg>

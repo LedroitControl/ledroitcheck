@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- LEDROITCHECK logo (clock, green theme) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+  <circle cx="12" cy="12" r="10" fill="#e8f5e9" stroke="#1b5e20" stroke-width="1.5" />
+  <circle cx="12" cy="12" r="1.8" fill="#1b5e20" />
+  <!-- hour hand -->
+  <path d="M12 12 L12 7" stroke="#2e7d32" stroke-width="2.2" stroke-linecap="round" />
+  <!-- minute hand -->
+  <path d="M12 12 L16 12" stroke="#66bb6a" stroke-width="2" stroke-linecap="round" />
+</svg>

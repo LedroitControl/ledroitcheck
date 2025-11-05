@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Ingreso Derivado (GET) — LEDROITCHECK</title>
   <link rel="stylesheet" href="css/main.css" />
+  <link rel="icon" type="image/svg+xml" href="assets/logo-ledroitcheck.svg" />
   <!-- Header global desde documentación -->
   <link rel="stylesheet" href="assets/global-header.css" />
   <script src="assets/global-header.js"></script>
@@ -26,7 +27,7 @@
   <main class="page">
     <section class="card">
       <h2>Procesamiento de Ingreso Derivado (GET)</h2>
-      <p class="helper">Fase 1: esta página muestra los datos recibidos por GET para verificación visual. En Fase 5 se conectará la recepción por POST y auditoría.</p>
+      <p class="helper">Fase 1: esta página muestra los datos recibidos por GET para verificación visual. Si llegaste desde POST, también se mostrará el último payload recibido y se confirmará la sesión. Ya está conectado a la recepción por POST y respaldo/auditoría.</p>
       <div id="resultado" class="card"></div>
       <div class="actions">
         <button class="btn secondary" id="btnLimpiar">Limpiar parámetros de URL</button>
@@ -40,24 +41,43 @@
 
     const params = new URLSearchParams(location.search);
     const dataParam = params.get('data') || params.get('respuestaLMaster');
+    let mostrado = false;
     if (dataParam) {
       try {
         const obj = JSON.parse(decodeURIComponent(dataParam));
         document.getElementById('resultado').innerHTML = `<pre>${JSON.stringify(obj, null, 2)}</pre>`;
         showToast('Datos GET mostrados (Fase 1)', 'success');
+        mostrado = true;
       } catch {
         showToast('Parámetro inválido', 'error');
       }
-    } else {
-      document.getElementById('resultado').innerHTML = '<p class="muted">No hay parámetros de datos en la URL.</p>';
+    }
+
+    // Si no hay params, intentar mostrar el último payload recibido por POST
+    if (!mostrado) {
+      try {
+        const raw = sessionStorage.getItem('ls_lastRespuestaLMaster') || localStorage.getItem('ls_lastRespuestaLMaster');
+        const obj = raw ? JSON.parse(raw) : null;
+        if (obj) {
+          document.getElementById('resultado').innerHTML = `<pre>${JSON.stringify(obj, null, 2)}</pre>`;
+          const sourceMsg = params.get('hasData') ? 'Llegaste desde POST: sesión creada y respaldo guardado' : 'Mostrando último payload recibido por POST';
+          showToast(sourceMsg, 'success');
+          mostrado = true;
+        }
+      } catch {}
+    }
+
+    if (!mostrado) {
+      document.getElementById('resultado').innerHTML = '<p class="muted">No hay parámetros de datos en la URL ni payload en sesión.</p>';
     }
 
     document.getElementById('btnLimpiar').addEventListener('click', () => {
       const url = new URL(location.href);
       url.searchParams.delete('data');
       url.searchParams.delete('respuestaLMaster');
+      url.searchParams.delete('hasData');
       history.replaceState({}, document.title, url.pathname);
-      document.getElementById('resultado').innerHTML = '<p class="muted">Parámetros limpiados.</p>';
+      document.getElementById('resultado').innerHTML = '<p class="muted">Parámetros limpiados. Si llegaste desde POST, puedes recargar para ver el último payload persistido.</p>';
       showToast('Parámetros de URL limpiados', 'info');
       log('URL limpia en ingreso-derivado.html');
     });

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Login — LEDROITCHECK</title>
   <link rel="stylesheet" href="css/main.css" />
+  <link rel="icon" type="image/svg+xml" href="assets/logo-ledroitcheck.svg" />
   <!-- Firebase SDK (compat) para Firestore respaldo -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -38,7 +39,7 @@
         </div>
 
         <div class="actions">
-          <button type="submit" class="btn">Ingresar</button>
+          <button type="submit" class="btn" id="btnSubmit">Ingresar</button>
           <button type="reset" class="btn secondary">Limpiar</button>
         </div>
       </form>
@@ -54,6 +55,7 @@
     const $cla = document.getElementById('claBComun');
     const $toggle = document.getElementById('toggleMask');
     const $form = document.getElementById('loginForm');
+    const $btnSubmit = document.getElementById('btnSubmit');
 
     $inic.addEventListener('input', () => {
       const pos = $inic.selectionStart;
@@ -67,6 +69,14 @@
       masked = !masked;
       if (masked) { $cla.classList.add('masked'); $toggle.textContent = 'Mostrar'; }
       else { $cla.classList.remove('masked'); $toggle.textContent = 'Ocultar'; }
+    });
+
+    // Al presionar TAB en claBComun, enfocar el botón de enviar
+    $cla.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab' && !e.shiftKey) {
+        e.preventDefault();
+        if ($btnSubmit) { $btnSubmit.focus(); }
+      }
     });
 
     const AUTH_URL = 'https://authlogin-fmunxt6pjq-uc.a.run.app';
@@ -96,7 +106,7 @@
         timestamp: new Date().toISOString()
       };
       try {
-        localStorage.setItem('ls_session', JSON.stringify(ls_session));
+        // Solo sessionStorage para sesión por pestaña
         sessionStorage.setItem('ls_session', JSON.stringify(ls_session));
       } catch {}
       return ls_session;

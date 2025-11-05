@@ -19,8 +19,8 @@ class GlobalHeaderSystem {
         this.config = {
             templatePath: './assets/global-header-template.html',
             cssPath: './assets/global-header.css',
-            logoPath: './assets/logo-ledroitsender.svg',
-            appName: 'Ledroitsender'
+            logoPath: './assets/logo-ledroitcheck.svg',
+            appName: 'LedroitCheck'
         };
         
         this.session = null;
@@ -251,7 +251,7 @@ class GlobalHeaderSystem {
                 <img src="${this.config.logoPath}" alt="${this.config.appName}" class="brand-logo" />
                 <div class="brand-info">
                     <span class="brand-name">${this.config.appName}</span>
-                    <span class="brand-subtitle">Sistema de envío</span>
+                    <span class="brand-subtitle">Sistema de nómina</span>
                 </div>
             </div>
         `;
@@ -495,18 +495,39 @@ class GlobalHeaderSystem {
     }
 
     handleLogout() {
-        if (confirm('¿Está seguro que desea cerrar sesión?')) {
-            // Intentar logout con diferentes métodos
-            if (window.ledroitAuth && typeof window.ledroitAuth.logout === 'function') {
-                window.ledroitAuth.logout();
-            } else {
-                // Limpiar sesión manualmente
-                sessionStorage.removeItem('ls_session');
-                localStorage.removeItem('ls_session');
+        if (!confirm('¿Está seguro que desea cerrar sesión?')) return;
+
+        try {
+            // 1) Cerrar sesión en Firebase si está disponible
+            const firebaseAuth = (window.firebase && window.firebase.auth) ? window.firebase.auth() : null;
+            const auth = window.auth || null;
+            if (firebaseAuth && typeof firebaseAuth.signOut === 'function') {
+                firebaseAuth.signOut().catch(() => {});
             }
-            
-            // Redirigir al login
-            window.location.href = 'index.html';
+            if (auth && typeof auth.signOut === 'function') {
+                try { auth.signOut(); } catch (e) {}
+            }
+
+            // 2) Intentar método de logout propio si existe
+            if (window.ledroitAuth && typeof window.ledroitAuth.logout === 'function') {
+                try { window.ledroitAuth.logout(); } catch (e) {}
+            }
+
+            // 3) Limpiar todas las claves de sesión comunes
+            try { sessionStorage.removeItem('ls_session'); } catch {}
+            try { localStorage.removeItem('ls_session'); } catch {}
+            try { sessionStorage.removeItem('ledroitAuth'); } catch {}
+            try { localStorage.removeItem('ledroitAuth'); } catch {}
+
+            // 4) Limpiar variable global
+            try { window.ledroitAuth = null; } catch {}
+
+            // 5) Notificar y redirigir a login
+            window.dispatchEvent(new CustomEvent('sessionChanged', { detail: null }));
+            window.location.replace('login.html');
+        } catch (error) {
+            console.warn('GlobalHeader: Error durante el cierre de sesión', error);
+            window.location.replace('login.html');
         }
     }
 
