@@ -45,12 +45,19 @@
     ['mousemove','mousedown','keydown','scroll','touchstart','click'].forEach(function(evt){
       window.addEventListener(evt, resetTimer, { passive: true });
     });
-    // Al cerrar la pestaña/ventana, limpiar la sesión
-    window.addEventListener('unload', function(){
-      // Nota: unload no garantiza ejecuciones largas; operaciones sincronas de storage son suficientes
-      clearSessionStorage();
-      clearLocalSessionFallback();
-    });
+    // Al cerrar la pestaña/ventana, limpiar la sesión SOLO si está habilitado explícitamente.
+    // Por defecto queda deshabilitado para permitir navegación interna entre páginas del mismo sistema
+    // manteniendo la sesión en sessionStorage.
+    try {
+      var shouldClearOnUnload = !!window.SESSION_CLEAR_ON_UNLOAD;
+      if (shouldClearOnUnload) {
+        window.addEventListener('unload', function(){
+          // Nota: unload no garantiza ejecuciones largas; operaciones sincronas de storage son suficientes
+          clearSessionStorage();
+          clearLocalSessionFallback();
+        });
+      }
+    } catch {}
   }
 
   // Exponer API global
