@@ -206,8 +206,14 @@
             <div class="alert alert-error">
                 <h2>🔒 Acceso Restringido</h2>
                 <p>Debes estar autenticado para usar esta herramienta de pruebas.</p>
-                <p>Por favor, inicia sesión primero en el sistema.</p>
-                <button class="btn" onclick="window.location.href='login.html'">🔑 Ir al Login</button>
+                <p>Por favor, inicia sesión primero en el sistema o crea una sesión de prueba.</p>
+                <div style="margin-top: 10px;">
+                    <button class="btn" onclick="window.location.href='login.html'">🔑 Ir al Login</button>
+                    <button class="btn success" onclick="crearSesionPrueba()">🧪 Crear sesión de prueba</button>
+                </div>
+                <div style="font-size: 12px; color: #666; margin-top: 10px;">
+                    Esta opción crea una sesión temporal en esta pestaña para fines de prueba.
+                </div>
             </div>
         </div>
 
@@ -346,7 +352,28 @@
 
         function verificarSesion() {
             // Verificar si hay sesión activa (aceptar estructura usada por este sistema)
-            const session = JSON.parse(sessionStorage.getItem('ls_session') || localStorage.getItem('ls_session') || '{}');
+            const rawLs = sessionStorage.getItem('ls_session') || localStorage.getItem('ls_session');
+            let session = {};
+            try { session = rawLs ? JSON.parse(rawLs) : {}; } catch { session = {}; }
+
+            // Fallback: intentar mapear desde ledroitAuth si existe
+            if ((!session || !session.timestamp) && sessionStorage.getItem('ledroitAuth')) {
+                try {
+                    const la = JSON.parse(sessionStorage.getItem('ledroitAuth'));
+                    if (la && (la.iniciales || la.initials)) {
+                        session = {
+                            iniciales: la.iniciales || la.initials,
+                            nombre: la.nombre || 'Usuario',
+                            foto_url: la.foto_url || null,
+                            companies: la.companies || la.empresas || [],
+                            ledroitMasterResponse: la.ledroitMasterResponse || null,
+                            timestamp: new Date().toISOString()
+                        };
+                        sessionStorage.setItem('ls_session', JSON.stringify(session));
+                        log('ℹ️ Sesión creada desde ledroitAuth (fallback)', 'info');
+                    }
+                } catch {}
+            }
             const tieneIniciales = !!(session.initials || session.iniciales);
             const ts = session.timestamp;
             if (!tieneIniciales || !ts) {
@@ -378,6 +405,36 @@
             cargarInformacionSesion();
             log('🚀 Herramienta de prueba cargada', 'success');
             return true;
+        }
+
+        function crearSesionPrueba() {
+            try {
+                const sesPrueba = {
+                    iniciales: 'ABC123',
+                    nombre: 'Usuario Prueba',
+                    foto_url: null,
+                    companies: [
+                        { nombre: 'LEDROIT', empresa_activa: true, usuario_activo: true, rol: ['A1'] }
+                    ],
+                    ledroitMasterResponse: {
+                        data: {
+                            iniciales: 'ABC123',
+                            nombre: 'Usuario Prueba',
+                            empresas: [
+                                { nombre: 'LEDROIT', empresa_activa: true, usuario_activo: true, rol: ['A1'] }
+                            ]
+                        }
+                    },
+                    timestamp: new Date().toISOString()
+                };
+                sessionStorage.setItem('ls_session', JSON.stringify(sesPrueba));
+                showToast('Sesión de prueba creada', 'success');
+                log('✅ Sesión de prueba creada', 'success');
+                verificarSesion();
+            } catch (e) {
+                console.error('Error creando sesión de prueba:', e);
+                showToast('Error creando sesión de prueba', 'error');
+            }
         }
 
         function cargarInformacionSesion() {
