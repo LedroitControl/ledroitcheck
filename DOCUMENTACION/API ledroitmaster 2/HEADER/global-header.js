@@ -103,9 +103,9 @@ class GlobalHeaderSystem {
         // Intentar obtener sesión de window.ledroitAuth primero
         if (window.ledroitAuth && window.ledroitAuth.user) {
             this.session = {
-                usuario: window.ledroitAuth.user.usuario,
+                nombre: window.ledroitAuth.user.nombre || window.ledroitAuth.user.usuario,
                 iniciales: window.ledroitAuth.user.iniciales, // ✅ Usar "iniciales"
-                avatar: window.ledroitAuth.user.avatar,
+                foto_url: window.ledroitAuth.user.foto_url || window.ledroitAuth.user.avatar,
                 empresas: window.ledroitAuth.user.empresas || []
             };
         }
@@ -114,9 +114,9 @@ class GlobalHeaderSystem {
             try {
                 const sessionData = JSON.parse(sessionStorage.getItem('ledroitAuth'));
                 this.session = {
-                    usuario: sessionData.user?.nombre || sessionData.usuario,
+                    nombre: sessionData.nombre || sessionData.user?.nombre || sessionData.usuario,
                     iniciales: sessionData.iniciales || sessionData.initials, // ✅ Priorizar "iniciales"
-                    avatar: sessionData.user?.foto_url || sessionData.avatar,
+                    foto_url: sessionData.foto_url || sessionData.user?.foto_url || sessionData.avatar,
                     empresas: sessionData.empresas || []
                 };
             } catch (error) {
@@ -291,15 +291,15 @@ class GlobalHeaderSystem {
 
         const user = this.session.user || {};
         const iniciales = this.session.iniciales || 'NN'; // ✅ Usar "iniciales"
-        const userName = this.session.usuario || user.nombre || `Usuario ${iniciales}`;
-        const fotoUrl = this.session.avatar || user.foto_url;
+        const userName = this.session.nombre || user.nombre || `Usuario ${iniciales}`;
+        const fotoUrl = this.session.foto_url || user.foto_url;
 
         console.log('GlobalHeader: Configurando sección de usuario para', userName);
         console.log('GlobalHeader: Datos de sesión:', {
             iniciales: this.session.iniciales, // ✅ Usar "iniciales"
-            usuario: this.session.usuario,
+            nombre: this.session.nombre,
             user: this.session.user,
-            avatar: this.session.avatar,
+            foto_url: this.session.foto_url,
             empresas: this.session.empresas?.length
         });
 

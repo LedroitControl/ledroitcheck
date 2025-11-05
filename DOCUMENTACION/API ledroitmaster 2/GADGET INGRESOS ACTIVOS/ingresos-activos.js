@@ -3,6 +3,8 @@ class IngresosActivosWidget {
     constructor() {
         this.isOpen = false;
         this.sistemas = [];
+        // Referencia a Firestore si está disponible
+        this.db = (typeof window !== 'undefined' && window.db) ? window.db : undefined;
         // Definir empresas y roles para los modales
         this.empresas = ['LEDROIT', 'DECLAROFACTUR', 'CLIENTE_EXTERNO'];
         this.roles = ['A1', 'A2', 'A3', 'A4'];
@@ -21,36 +23,32 @@ class IngresosActivosWidget {
 
     checkUserRole() {
         try {
-            // Usar la misma lógica que admin-guard.js
-            const userEmpresas = JSON.parse(sessionStorage.getItem('userEmpresas') || '[]');
-            console.log('Empresas del usuario:', userEmpresas);
-            
-            const declarofacilEmpresa = userEmpresas.find(emp => emp.nombre === 'DECLAROFACIL');
-            console.log('Empresa DECLAROFACIL encontrada:', declarofacilEmpresa);
-            
-            if (declarofacilEmpresa && declarofacilEmpresa.rol) {
-                // Si rol es un array, tomar el primer elemento
-                const rol = Array.isArray(declarofacilEmpresa.rol) ? declarofacilEmpresa.rol[0] : declarofacilEmpresa.rol;
-                
-                // Extraer el rol principal (A1, A2, A3, A4)
-                if (typeof rol === 'string') {
-                    const roleMatch = rol.match(/A[1-4]/);
-                    const userRole = roleMatch ? roleMatch[0] : 'A4';
-                    
-                    console.log('Rol del usuario:', userRole);
-                    
-                    // Solo mostrar para roles A1, A2 y A3
-                    if (userRole === 'A1' || userRole === 'A2' || userRole === 'A3') {
-                        console.log('✅ Usuario autorizado para ver Ingresos Activos');
-                        return true;
-                    } else {
-                        console.log('❌ Usuario sin permisos para ver Ingresos Activos - Rol:', userRole);
-                        return false;
+            // Usar lógica basada en ls_session/ledroitAuth estandarizada
+            const userEmpresas = this.getEmpresasFromSession();
+            console.log('Empresas del usuario (estándar):', userEmpresas);
+
+            if (!Array.isArray(userEmpresas) || userEmpresas.length === 0) {
+                console.log('❌ No hay empresas en la sesión activa (ls_session/ledroitAuth)');
+                return false;
+            }
+
+            // Autorizar si el usuario tiene rol A1, A2 o A3 en cualquier empresa
+            for (const empresa of userEmpresas) {
+                if (empresa && empresa.rol) {
+                    const rol = Array.isArray(empresa.rol) ? empresa.rol[0] : empresa.rol;
+                    if (typeof rol === 'string') {
+                        const roleMatch = rol.match(/A[1-4]/);
+                        const userRole = roleMatch ? roleMatch[0] : 'A4';
+                        console.log(`Rol detectado en "${empresa.nombre}":`, userRole);
+                        if (userRole === 'A1' || userRole === 'A2' || userRole === 'A3') {
+                            console.log('✅ Usuario autorizado para ver Ingresos Activos');
+                            return true;
+                        }
                     }
                 }
             }
-            
-            console.log('❌ No se encontró empresa DECLAROFACIL o rol válido');
+
+            console.log('❌ Usuario sin permisos A1/A2/A3 en sus empresas');
             return false;
         } catch (error) {
             console.error('Error obteniendo rol del usuario:', error);
@@ -58,10 +56,46 @@ class IngresosActivosWidget {
         }
     }
 
+    // Normalizador de sesión al estándar LedroitMaster (ES)
+    // Apegado a la guía: usar SIEMPRE nomenclatura en español dentro de ls_session
+    normalizeSession(session) {
+        if (!session || typeof session !== 'object') return null;
+        const s = { ...session };
+        // Iniciales y nombre solo en español
+        s.iniciales = s.iniciales || (s.user && s.user.iniciales) || null;
+        s.nombre = s.nombre || (s.user && s.user.nombre) || null;
+        // Empresas en español
+        s.empresas = Array.isArray(s.empresas)
+            ? s.empresas
+            : (s.user && Array.isArray(s.user.empresas) ? s.user.empresas : []);
+        // Homologar estructura de empresas (si ya usan estándar, se conserva)
+        s.empresas = s.empresas.map(e => ({
+            id: e.id,
+            nombre: e.nombre,
+            empresa_activa: typeof e.empresa_activa === 'boolean' ? e.empresa_activa : true,
+            usuario_activo: typeof e.usuario_activo === 'boolean' ? e.usuario_activo : true,
+            rol: Array.isArray(e.rol) ? e.rol : []
+        }));
+        return s;
+    }
+
+    // Obtener empresas del usuario desde la sesión estandarizada (ls_session / ledroitAuth)
+    getEmpresasFromSession() {
+        try {
+            const raw = sessionStorage.getItem('ledroitAuth') || sessionStorage.getItem('ls_session');
+            if (!raw) return [];
+            const s = this.normalizeSession(JSON.parse(raw));
+            return Array.isArray(s?.empresas) ? s.empresas : [];
+        } catch (e) {
+            console.warn('No se pudo leer empresas desde la sesión:', e);
+            return [];
+        }
+    }
+
     // Nueva función para verificar si el usuario puede configurar (solo A1 y A2)
     canUserConfigure() {
         try {
-            const userEmpresas = JSON.parse(sessionStorage.getItem('userEmpresas') || '[]');
+            const userEmpresas = this.getEmpresasFromSession();
             
             // Verificar si el usuario tiene rol A1 o A2 en al menos una empresa
             const hasConfigPermission = userEmpresas.some(empresa => {
@@ -87,7 +121,7 @@ class IngresosActivosWidget {
     // Nueva función para verificar si el usuario puede editar/eliminar un sistema específico
     canUserEditSystem(sistema) {
         try {
-            const userEmpresas = JSON.parse(sessionStorage.getItem('userEmpresas') || '[]');
+            const userEmpresas = this.getEmpresasFromSession();
             
             // Verificar si el usuario coincide con alguna empresa/rol del sistema
             const hasSystemAccess = sistema.permisos.some(permiso => {
@@ -673,14 +707,14 @@ class IngresosActivosWidget {
         console.log('Cargando sistemas...');
         try {
             // Obtener empresas del usuario logueado
-            const userEmpresas = JSON.parse(sessionStorage.getItem('userEmpresas') || '[]');
-            console.log('Empresas del usuario:', userEmpresas);
+            const userEmpresas = this.getEmpresasFromSession();
+            console.log('Empresas del usuario (estándar):', userEmpresas);
             
             // Intentar cargar desde Firestore
-            if (typeof db !== 'undefined') {
+            if (this.db) {
                 console.log('Intentando cargar desde Firestore...');
                 try {
-                    const snapshot = await db.collection('configIngActivos').get();
+                    const snapshot = await this.db.collection('configIngActivos').get();
                     this.sistemas = [];
                     
                     snapshot.forEach(doc => {
@@ -694,11 +728,42 @@ class IngresosActivosWidget {
                                 descripcion: data.descripcion || '',
                                 sistemaOrigen: data.sistemaOrigen || 'DECLAROFACTUR',
                                 empresaSolicitante: data.empresaSolicitante || '',
-                                permisos: data.permisos || []
+                                permisos: data.permisos || [],
+                                abrirNuevaVentana: !!data.abrirNuevaVentana
                             });
                         }
                     });
                     console.log('Sistemas cargados desde Firestore:', this.sistemas);
+
+                    // Migración automática desde localStorage → Firestore (una sola vez)
+                    try {
+                        const yaMigrado = localStorage.getItem('ingActivosMigrado') === '1';
+                        const localesRaw = localStorage.getItem('ingresosActivosSistemas');
+                        const locales = localesRaw ? JSON.parse(localesRaw) : [];
+                        if (!yaMigrado && Array.isArray(locales) && locales.length > 0) {
+                            console.log('Detectados sistemas locales, iniciando migración a Firestore...');
+                            for (const s of locales) {
+                                // Evitar duplicados si ya existe con mismo nombre+url
+                                const yaExiste = this.sistemas.some(x => x.nombre === s.nombre && x.url === s.url);
+                                if (yaExiste) continue;
+                                const docRef = await this.db.collection('configIngActivos').add({
+                                    nombre: s.nombre,
+                                    url: s.url,
+                                    descripcion: s.descripcion || '',
+                                    sistemaOrigen: s.sistemaOrigen || 'DECLAROFACTUR',
+                                    empresaSolicitante: s.empresaSolicitante || '',
+                                    permisos: s.permisos || [],
+                                    abrirNuevaVentana: !!s.abrirNuevaVentana
+                                });
+                                this.sistemas.push({ ...s, id: docRef.id });
+                            }
+                            localStorage.setItem('ingActivosMigrado', '1');
+                            this.showToast('Sistemas locales migrados a Firestore', 'info');
+                            console.log('Migración completa.');
+                        }
+                    } catch (migErr) {
+                        console.warn('Error en migración automática:', migErr);
+                    }
                 } catch (firestoreError) {
                     console.warn('Error de Firestore:', firestoreError);
                     this.sistemas = []; // Lista vacía si no hay datos
@@ -831,8 +896,8 @@ class IngresosActivosWidget {
         console.log('Abriendo modal para agregar sistema...');
         
         // Obtener empresas del usuario
-        const userEmpresas = JSON.parse(sessionStorage.getItem('userEmpresas') || '[]');
-        console.log('Empresas del usuario para modal:', userEmpresas);
+        const userEmpresas = this.getEmpresasFromSession();
+        console.log('Empresas del usuario para modal (estándar):', userEmpresas);
         
         // Crear tabla de empresas con checkboxes
         const empresasTable = userEmpresas.map(empresa => {
@@ -1133,14 +1198,14 @@ class IngresosActivosWidget {
         };
         
         // Intentar guardar en Firestore
-        if (typeof db !== 'undefined') {
-            db.collection('configIngActivos').add(nuevoSistema)
+        if (this.db) {
+            this.db.collection('configIngActivos').add(nuevoSistema)
                 .then((docRef) => {
                     console.log('Sistema guardado en Firestore con ID:', docRef.id);
                     nuevoSistema.id = docRef.id;
                     this.sistemas.push(nuevoSistema);
                     this.renderSistemas();
-                    this.showToast('Sistema agregado exitosamente', 'success');
+                    this.showToast('Sistema agregado exitosamente (Firestore)', 'success');
                     document.body.removeChild(modal);
                 })
                 .catch((error) => {
@@ -1278,11 +1343,12 @@ class IngresosActivosWidget {
     }
     
     // Función para enviar usuario a otro sistema con información de sesión
-    enviarUsuarioASistema(urlDestino, sistemaOrigen, empresaSolicitante, abrirNuevaVentana = true) {
+    async enviarUsuarioASistema(urlDestino, sistemaOrigen, empresaSolicitante, abrirNuevaVentana = true) {
         console.log('Enviando usuario a sistema:', { urlDestino, sistemaOrigen, empresaSolicitante, abrirNuevaVentana });
         
         // Verificar sesión activa usando el estándar ledroitAuth
-        const sessionData = sessionStorage.getItem('ledroitAuth');
+        const sessionData = sessionStorage.getItem('ledroitAuth')
+            || sessionStorage.getItem('ls_session');
         if (!sessionData) {
             this.showToast('No hay sesión activa. Inicia sesión primero.', 'error');
             console.log('Error: No hay sesión activa', 'error');
@@ -1291,8 +1357,10 @@ class IngresosActivosWidget {
         
         let iniciales;
         try {
-            const session = JSON.parse(sessionData);
-            iniciales = session.iniciales; // ✅ Usar "iniciales" estándar
+            const rawSession = JSON.parse(sessionData);
+            // Normalizar a estándar ES
+            const session = this.normalizeSession(rawSession);
+            iniciales = session?.iniciales || null;
             if (!iniciales) {
                 this.showToast('Sesión inválida: faltan iniciales del usuario.', 'error');
                 console.log('Error: Sesión inválida - faltan iniciales', 'error');
@@ -1305,13 +1373,23 @@ class IngresosActivosWidget {
         }
         
         // Obtener datos de ultimosIngresosSatisfactorios
-        const ultimoIngreso = localStorage.getItem(`ultimosIngresosSatisfactorios_${iniciales}`);
+        let ultimoIngreso = localStorage.getItem(`ultimosIngresosSatisfactorios_${iniciales}`);
+        if (!ultimoIngreso && typeof obtenerUltimoIngreso === 'function') {
+            try {
+                const registro = await obtenerUltimoIngreso(iniciales);
+                if (registro && registro.respuestaLMaster) {
+                    ultimoIngreso = JSON.stringify(registro);
+                }
+            } catch (e) {
+                console.warn('No se pudo obtener último ingreso desde Firestore:', e);
+            }
+        }
         if (!ultimoIngreso) {
             this.showToast('No se encontraron datos de último ingreso', 'error');
             console.log('Error: No se encontraron datos de último ingreso', 'error');
             return;
         }
-        
+
         try {
             const documentoEstandarizado = JSON.parse(ultimoIngreso);
             
@@ -1383,29 +1461,23 @@ class IngresosActivosWidget {
         
         // Limpiar formulario temporal
         document.body.removeChild(form);
-
-        // Cerrar sesión de este sistema solo si NO se abre en nueva ventana
-        if (!abrirNuevaVentana) {
-            try {
-                // Si existe un SessionManager global, usarlo
-                if (window.SessionManager && typeof window.SessionManager.logout === 'function') {
-                    // No redirige porque el formulario ya está enviando al sistema pasivo en esta misma ventana
-                    window.SessionManager.logout(false);
-                } else {
-                    // Fallback: limpiar claves de sesión estándar
-                    sessionStorage.removeItem('ledroitAuth');
-                    sessionStorage.removeItem('ls_session');
-                    localStorage.removeItem('ledroitAuth');
-                    localStorage.removeItem('ls_session');
-                }
-                console.log('Sesión del sistema actual cerrada (envío en misma ventana).');
-            } catch (e) {
-                console.warn('Error cerrando sesión local tras envío en misma ventana:', e);
-            }
-        }
         
         this.showToast('Usuario enviado correctamente por POST', 'success');
         console.log('ENVÍO - Formulario POST enviado exitosamente (endpoint /ingreso-derivado si aplica)', 'success');
+
+        // Cerrar sesión en LEDROITCHECK solo si NO se abre en nueva ventana
+        try {
+            if (!abrirNuevaVentana) {
+                if (window.SessionManager) {
+                    // Cerrar sesión sin redireccionar, porque la navegación ocurre a la misma ventana
+                    window.SessionManager.logout('activeIngreso', false);
+                } else {
+                    // Fallback simple
+                    try { sessionStorage.removeItem('ls_session'); } catch {}
+                    try { sessionStorage.removeItem('ledroitAuth'); } catch {}
+                }
+            }
+        } catch (e) { /* ignore */ }
     }
      
      // Función para editar un sistema
@@ -1422,7 +1494,7 @@ class IngresosActivosWidget {
     // Función para mostrar modal de edición
     mostrarModalEdicion(sistema) {
         // Obtener empresas del usuario para la tabla
-        const userEmpresas = JSON.parse(sessionStorage.getItem('userEmpresas') || '[]');
+        const userEmpresas = this.getEmpresasFromSession();
         
         // Crear tabla de empresas igual que en agregar sistema
         const empresasTable = userEmpresas.map(empresa => {
@@ -1673,9 +1745,9 @@ class IngresosActivosWidget {
         
         // Actualizar en Firestore o localStorage
         if (this.db) {
-            this.db.collection('ingresosActivosSistemas').doc(sistemaId).update(sistemaActualizado)
+            this.db.collection('configIngActivos').doc(sistemaId).update(sistemaActualizado)
                 .then(() => {
-                    this.showToast(`Sistema "${nombre}" actualizado correctamente`, 'success');
+                    this.showToast(`Sistema "${nombre}" actualizado correctamente (Firestore)`, 'success');
                     this.actualizarSistemaLocal(sistemaActualizado);
                     modal.remove();
                     this.renderSistemas();
@@ -1687,7 +1759,7 @@ class IngresosActivosWidget {
         } else {
             // Actualizar en localStorage
             this.actualizarSistemaEnLocalStorage(sistemaActualizado);
-            this.showToast(`Sistema "${nombre}" actualizado (localmente)`, 'info');
+            this.showToast(`Sistema "${nombre}" actualizado (local)`, 'info');
             modal.remove();
             this.renderSistemas();
         }
@@ -1732,8 +1804,8 @@ class IngresosActivosWidget {
          const sistemaNombre = this.sistemas[sistemaIndex].nombre;
          
          // Eliminar de Firestore si está disponible
-         if (typeof db !== 'undefined') {
-             db.collection('configIngActivos').doc(sistemaId).delete()
+         if (this.db) {
+             this.db.collection('configIngActivos').doc(sistemaId).delete()
                  .then(() => {
                      console.log('Sistema eliminado de Firestore');
                      this.sistemas.splice(sistemaIndex, 1);
@@ -1744,12 +1816,12 @@ class IngresosActivosWidget {
                      console.error('Error eliminando de Firestore:', error);
                      // Fallback a localStorage
                      this.eliminarDeLocalStorage(sistemaId);
-                     this.showToast(`Sistema "${sistemaNombre}" eliminado (localmente)`, 'info');
+                     this.showToast(`Sistema "${sistemaNombre}" eliminado (local)`, 'info');
                  });
          } else {
              // Eliminar de localStorage
              this.eliminarDeLocalStorage(sistemaId);
-             this.showToast(`Sistema "${sistemaNombre}" eliminado (localmente)`, 'info');
+             this.showToast(`Sistema "${sistemaNombre}" eliminado (local)`, 'info');
          }
      }
      
@@ -1773,18 +1845,18 @@ class IngresosActivosWidget {
 // Inicializar el widget cuando el DOM esté listo
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-        const allowedPages = ['inicio.html', 'panel.html', 'clientes.html', 'facturasapi.html', 'prueba-api.html'];
+        const currentPage = window.location.pathname.split('/').pop() || 'menu.html';
+        const allowedPages = ['menu.html'];
         
-        if (allowedPages.includes(currentPage) || currentPage === '' || currentPage === 'index.html') {
+        if (allowedPages.includes(currentPage)) {
             new IngresosActivosWidget();
         }
     });
 } else {
-    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-    const allowedPages = ['inicio.html', 'panel.html', 'clientes.html', 'facturasapi.html', 'prueba-api.html'];
+    const currentPage = window.location.pathname.split('/').pop() || 'menu.html';
+    const allowedPages = ['menu.html'];
     
-    if (allowedPages.includes(currentPage) || currentPage === '' || currentPage === 'index.html') {
+    if (allowedPages.includes(currentPage)) {
         new IngresosActivosWidget();
     }
 }

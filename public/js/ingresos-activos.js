@@ -23,12 +23,12 @@ class IngresosActivosWidget {
 
     checkUserRole() {
         try {
-            // Usar la misma lógica que admin-guard.js, pero sin limitar a una empresa específica
-            const userEmpresas = JSON.parse(sessionStorage.getItem('userEmpresas') || '[]');
-            console.log('Empresas del usuario:', userEmpresas);
+            // Usar lógica basada en ls_session/ledroitAuth estandarizada
+            const userEmpresas = this.getEmpresasFromSession();
+            console.log('Empresas del usuario (estándar):', userEmpresas);
 
             if (!Array.isArray(userEmpresas) || userEmpresas.length === 0) {
-                console.log('❌ No hay empresas en sessionStorage:userEmpresas');
+                console.log('❌ No hay empresas en la sesión activa (ls_session/ledroitAuth)');
                 return false;
             }
 
@@ -56,10 +56,46 @@ class IngresosActivosWidget {
         }
     }
 
+    // Normalizador de sesión al estándar LedroitMaster (ES)
+    // Apegado a la guía: usar SIEMPRE nomenclatura en español dentro de ls_session
+    normalizeSession(session) {
+        if (!session || typeof session !== 'object') return null;
+        const s = { ...session };
+        // Iniciales y nombre solo en español
+        s.iniciales = s.iniciales || (s.user && s.user.iniciales) || null;
+        s.nombre = s.nombre || (s.user && s.user.nombre) || null;
+        // Empresas en español
+        s.empresas = Array.isArray(s.empresas)
+            ? s.empresas
+            : (s.user && Array.isArray(s.user.empresas) ? s.user.empresas : []);
+        // Homologar estructura de empresas (si ya usan estándar, se conserva)
+        s.empresas = s.empresas.map(e => ({
+            id: e.id,
+            nombre: e.nombre,
+            empresa_activa: typeof e.empresa_activa === 'boolean' ? e.empresa_activa : true,
+            usuario_activo: typeof e.usuario_activo === 'boolean' ? e.usuario_activo : true,
+            rol: Array.isArray(e.rol) ? e.rol : []
+        }));
+        return s;
+    }
+
+    // Obtener empresas del usuario desde la sesión estandarizada (ls_session / ledroitAuth)
+    getEmpresasFromSession() {
+        try {
+            const raw = sessionStorage.getItem('ledroitAuth') || sessionStorage.getItem('ls_session');
+            if (!raw) return [];
+            const s = this.normalizeSession(JSON.parse(raw));
+            return Array.isArray(s?.empresas) ? s.empresas : [];
+        } catch (e) {
+            console.warn('No se pudo leer empresas desde la sesión:', e);
+            return [];
+        }
+    }
+
     // Nueva función para verificar si el usuario puede configurar (solo A1 y A2)
     canUserConfigure() {
         try {
-            const userEmpresas = JSON.parse(sessionStorage.getItem('userEmpresas') || '[]');
+            const userEmpresas = this.getEmpresasFromSession();
             
             // Verificar si el usuario tiene rol A1 o A2 en al menos una empresa
             const hasConfigPermission = userEmpresas.some(empresa => {
@@ -85,7 +121,7 @@ class IngresosActivosWidget {
     // Nueva función para verificar si el usuario puede editar/eliminar un sistema específico
     canUserEditSystem(sistema) {
         try {
-            const userEmpresas = JSON.parse(sessionStorage.getItem('userEmpresas') || '[]');
+            const userEmpresas = this.getEmpresasFromSession();
             
             // Verificar si el usuario coincide con alguna empresa/rol del sistema
             const hasSystemAccess = sistema.permisos.some(permiso => {
@@ -671,8 +707,8 @@ class IngresosActivosWidget {
         console.log('Cargando sistemas...');
         try {
             // Obtener empresas del usuario logueado
-            const userEmpresas = JSON.parse(sessionStorage.getItem('userEmpresas') || '[]');
-            console.log('Empresas del usuario:', userEmpresas);
+            const userEmpresas = this.getEmpresasFromSession();
+            console.log('Empresas del usuario (estándar):', userEmpresas);
             
             // Intentar cargar desde Firestore
             if (this.db) {
@@ -860,8 +896,8 @@ class IngresosActivosWidget {
         console.log('Abriendo modal para agregar sistema...');
         
         // Obtener empresas del usuario
-        const userEmpresas = JSON.parse(sessionStorage.getItem('userEmpresas') || '[]');
-        console.log('Empresas del usuario para modal:', userEmpresas);
+        const userEmpresas = this.getEmpresasFromSession();
+        console.log('Empresas del usuario para modal (estándar):', userEmpresas);
         
         // Crear tabla de empresas con checkboxes
         const empresasTable = userEmpresas.map(empresa => {
@@ -1321,12 +1357,10 @@ class IngresosActivosWidget {
         
         let iniciales;
         try {
-            const session = JSON.parse(sessionData);
-            // Intentar obtener iniciales en varios formatos
-            iniciales = session.iniciales
-                || (session.user && session.user.iniciales)
-                || session.initials
-                || null;
+            const rawSession = JSON.parse(sessionData);
+            // Normalizar a estándar ES
+            const session = this.normalizeSession(rawSession);
+            iniciales = session?.iniciales || null;
             if (!iniciales) {
                 this.showToast('Sesión inválida: faltan iniciales del usuario.', 'error');
                 console.log('Error: Sesión inválida - faltan iniciales', 'error');
@@ -1441,7 +1475,6 @@ class IngresosActivosWidget {
                     // Fallback simple
                     try { sessionStorage.removeItem('ls_session'); } catch {}
                     try { sessionStorage.removeItem('ledroitAuth'); } catch {}
-                    try { sessionStorage.removeItem('userEmpresas'); } catch {}
                 }
             }
         } catch (e) { /* ignore */ }
@@ -1461,7 +1494,7 @@ class IngresosActivosWidget {
     // Función para mostrar modal de edición
     mostrarModalEdicion(sistema) {
         // Obtener empresas del usuario para la tabla
-        const userEmpresas = JSON.parse(sessionStorage.getItem('userEmpresas') || '[]');
+        const userEmpresas = this.getEmpresasFromSession();
         
         // Crear tabla de empresas igual que en agregar sistema
         const empresasTable = userEmpresas.map(empresa => {

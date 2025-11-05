@@ -135,8 +135,8 @@ window.addEventListener('DOMContentLoaded', function() {
 
 3. ESTRUCTURA DE SESIÓN:
    - La página espera sesión en sessionStorage con clave 'ls_session'
-   - Estructura: { initials, user, companies, timestamp, ledroitMasterResponse }
-   - Si tu sistema usa otra estructura, adaptar la página principal
+   - Estructura estándar: { iniciales, nombre, foto_url, empresas, timestamp }
+   - Si tu sistema usa otra estructura, adapta la página principal para mapear a estas claves
 
 4. DEPENDENCIAS:
    - Firebase SDK v8.10.1 (ya incluido en la página)

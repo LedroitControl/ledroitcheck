@@ -346,7 +346,7 @@
             // Verificar si hay sesión activa
             const session = JSON.parse(sessionStorage.getItem('ls_session') || '{}');
             
-            if (!session.initials || !session.timestamp) {
+            if (!session.iniciales || !session.timestamp) {
                 // No hay sesión válida
                 document.getElementById('noSessionAlert').style.display = 'block';
                 document.getElementById('mainContent').style.display = 'none';
@@ -380,13 +380,16 @@
         function cargarInformacionSesion() {
             const sessionInfo = document.getElementById('sessionInfo');
             
-            if (sessionData && sessionData.initials) {
-                // La sesión tiene la estructura: { initials, user, companies, ledroitMasterResponse }
-                // Pero también podemos acceder a los datos originales desde ledroitMasterResponse
-                const userData = sessionData.user || {};
-                let empresas = sessionData.companies || [];
+            if (sessionData && sessionData.iniciales) {
+                // La sesión tiene la estructura estándar: { iniciales, nombre, foto_url, empresas, timestamp }
+                const userData = {
+                    iniciales: sessionData.iniciales,
+                    nombre: sessionData.nombre,
+                    foto_url: sessionData.foto_url
+                };
+                let empresas = sessionData.empresas || [];
                 
-                // Si no hay empresas en companies, intentar obtenerlas de ledroitMasterResponse
+                // Si no hay empresas en la sesión, intentar obtenerlas de ledroitMasterResponse
                 if (empresas.length === 0 && sessionData.ledroitMasterResponse && sessionData.ledroitMasterResponse.data) {
                     empresas = sessionData.ledroitMasterResponse.data.empresas || [];
                 }
@@ -394,14 +397,14 @@
                 const empresasActivas = empresas.filter(emp => emp.empresa_activa && emp.usuario_activo);
                 
                 sessionInfo.innerHTML = `
-                    <strong>👤 Usuario:</strong> ${userData.iniciales || sessionData.initials}<br>
+                    <strong>👤 Usuario:</strong> ${userData.iniciales || sessionData.iniciales}<br>
                     
                     <strong>⏰ Sesión iniciada:</strong> ${new Date(sessionData.timestamp).toLocaleString()}<br>
                     <strong>🏢 Empresas totales:</strong> ${empresas.length}<br>
                     <strong>✅ Empresas activas:</strong> ${empresasActivas.length}<br>
                     <strong>📋 Empresas:</strong> ${empresasActivas.map(emp => emp.nombre).join(', ') || 'Ninguna activa'}
                 `;
-                 log(`📋 Sesión cargada: ${userData.iniciales || sessionData.initials} (${empresasActivas.length} empresas activas)`, 'info');
+                 log(`📋 Sesión cargada: ${userData.iniciales || sessionData.iniciales} (${empresasActivas.length} empresas activas)`, 'info');
             } else {
                 sessionInfo.innerHTML = '<span style="color: #dc3545;">❌ Error cargando datos de sesión</span>';
                 log('⚠️ Error cargando datos de sesión', 'warning');
@@ -543,15 +546,15 @@
         }
 
         async function obtenerDatosParaEnvio(sistemaDestino) {
-            if (!sessionData || !sessionData.initials) {
+            if (!sessionData || !sessionData.iniciales) {
                 throw new Error('No hay sesión activa');
             }
 
-            // La sesión tiene la estructura: { initials, user, companies, ledroitMasterResponse }
-            const userData = sessionData.user || {};
-            let empresas = sessionData.companies || [];
+            // La sesión tiene la estructura estándar: { iniciales, nombre, foto_url, empresas, timestamp }
+            const userData = { iniciales: sessionData.iniciales, nombre: sessionData.nombre, foto_url: sessionData.foto_url };
+            let empresas = sessionData.empresas || [];
             
-            // Si no hay empresas en companies, intentar obtenerlas de ledroitMasterResponse
+            // Si no hay empresas en la sesión, intentar obtenerlas de ledroitMasterResponse
             if (empresas.length === 0 && sessionData.ledroitMasterResponse && sessionData.ledroitMasterResponse.data) {
                 empresas = sessionData.ledroitMasterResponse.data.empresas || [];
             }
@@ -567,8 +570,8 @@
                 success: true,
                 error: null,
                 data: {
-                    iniciales: userData.iniciales || sessionData.initials,
-                    nombre: userData.nombre || sessionData.initials,
+                    iniciales: userData.iniciales || sessionData.iniciales,
+                    nombre: userData.nombre || sessionData.nombre || userData.iniciales,
                     foto_url: (userData.foto_url || '').toString().trim().replace(/^[\s`'"]+/g, '').replace(/[\s`'"]+$/g, '').replace(/`/g, ''),
                     empresas: empresasActivas.map(emp => ({
                         nombre: emp.nombre,
@@ -582,7 +585,7 @@
                 empresaSolicitante: empresasActivas[0].nombre
             };
 
-            log(`📋 Datos obtenidos para: ${userData.iniciales || sessionData.initials}`, 'info');
+            log(`📋 Datos obtenidos para: ${userData.iniciales || sessionData.iniciales}`, 'info');
             log(`🏢 Empresa solicitante: ${empresasActivas[0].nombre}`, 'info');
             log(`📊 ${empresasActivas.length} empresas activas incluidas`, 'info');
             

@@ -105,9 +105,9 @@ class GlobalHeaderSystem {
             const auth = window.ledroitAuth || {};
             const user = auth.user || {};
             this.session = {
-                usuario: user.nombre || auth.nombre || auth.usuario || null,
-                iniciales: auth.iniciales || user.iniciales || auth.initials || null, // ✅ Usar "iniciales"
-                avatar: user.foto_url || auth.avatar || null,
+                nombre: user.nombre || auth.nombre || null,
+                iniciales: auth.iniciales || user.iniciales || null, // Solo "iniciales" según guía
+                foto_url: user.foto_url || auth.foto_url || auth.avatar || null,
                 empresas: user.empresas || auth.empresas || []
             };
         }
@@ -118,10 +118,10 @@ class GlobalHeaderSystem {
                 const ses = raw ? JSON.parse(raw) : null;
                 if (ses) {
                     this.session = {
-                        usuario: ses.nombre || ses.usuario || null,
-                        iniciales: ses.iniciales || ses.initials || null, // ✅ Priorizar "iniciales"
-                        avatar: ses.foto_url || null,
-                        empresas: ses.empresas || []
+                        nombre: ses.nombre || null,
+                        iniciales: ses.iniciales || null, // Solo "iniciales" según guía
+                        foto_url: ses.foto_url || null,
+                        empresas: Array.isArray(ses.empresas) ? ses.empresas : []
                     };
                 }
             } catch (error) {
@@ -282,15 +282,15 @@ class GlobalHeaderSystem {
 
         const user = this.session.user || {};
         const iniciales = this.session.iniciales || 'NN'; // ✅ Usar "iniciales"
-        const userName = this.session.usuario || user.nombre || `Usuario ${iniciales}`;
-        const fotoUrl = this.session.avatar || user.foto_url;
+        const userName = this.session.nombre || user.nombre || `Usuario ${iniciales}`;
+        const fotoUrl = this.session.foto_url || user.foto_url;
 
         console.log('GlobalHeader: Configurando sección de usuario para', userName);
         console.log('GlobalHeader: Datos de sesión:', {
             iniciales: this.session.iniciales, // ✅ Usar "iniciales"
-            usuario: this.session.usuario,
+            nombre: this.session.nombre,
             user: this.session.user,
-            avatar: this.session.avatar,
+            foto_url: this.session.foto_url,
             empresas: this.session.empresas?.length
         });
 

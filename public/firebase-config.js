@@ -132,7 +132,7 @@ class FirestoreManager {
             const documento = {
                 ...registro,
                 timestamp: new Date().toISOString(),
-                usuario: registro?.iniciales || 'SISTEMA'
+                iniciales: registro?.iniciales || 'SISTEMA'
             };
 
             await this.db.collection('entradas_salidas').add(documento);

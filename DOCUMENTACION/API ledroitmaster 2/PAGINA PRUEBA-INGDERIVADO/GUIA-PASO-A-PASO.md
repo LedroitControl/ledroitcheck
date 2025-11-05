@@ -181,20 +181,18 @@ Editar `./pages/testing/prueba-ingderivado.html`:
 ```javascript
 // Estructura de sesión en sessionStorage
 const sesionEjemplo = {
-    "initials": "AB",
-    "user": "usuario@ejemplo.com",
-    "companies": [
+    "iniciales": "AB",
+    "nombre": "Usuario Ejemplo",
+    "foto_url": "https://...",
+    "empresas": [
         {
-            "id": "123",
-            "name": "Empresa Ejemplo",
-            "active": true
+            "nombre": "Empresa Ejemplo",
+            "empresa_activa": true,
+            "usuario_activo": true,
+            "rol": ["A1"]
         }
     ],
-    "timestamp": Date.now(),
-    "ledroitMasterResponse": {
-        "success": true,
-        "data": {}
-    }
+    "timestamp": Date.now()
 };
 
 // Guardar en sessionStorage
@@ -206,7 +204,7 @@ sessionStorage.setItem('ls_session', JSON.stringify(sesionEjemplo));
 Si tu sistema usa una estructura diferente, modificar en la página:
 
 ```javascript
-// Buscar función cargarSesion() y adaptar
+// Buscar función cargarSesion() y adaptar a las claves estándar
 function cargarSesion() {
     const sessionKey = getConfig('sesion').storageKey;
     const sessionData = sessionStorage.getItem(sessionKey);
@@ -219,10 +217,10 @@ function cargarSesion() {
     try {
         const session = JSON.parse(sessionData);
         
-        // ⚠️ ADAPTAR SEGÚN TU ESTRUCTURA
-        const initials = session.initials || session.userInitials;
-        const user = session.user || session.email;
-        const companies = session.companies || session.activeCompanies;
+        // ⚠️ ADAPTAR SEGÚN TU ESTRUCTURA -> MAPEAR A CLAVES ESTÁNDAR
+        const iniciales = session.iniciales || session.userInitials;
+        const nombre = session.nombre || session.iniciales;
+        const empresas = session.empresas || session.activeCompanies;
         
         // Resto de la función...
     } catch (error) {
@@ -258,22 +256,17 @@ console.error('❌ Página ingreso-derivado.html no encontrada');
 // Ejecutar en consola del navegador para crear sesión de prueba
 function crearSesionPrueba() {
     const sesionPrueba = {
-        initials: "TP",
-        user: "test@prueba.com",
-        companies: [
+        iniciales: "TP",
+        nombre: "Test Prueba",
+        empresas: [
             {
-                id: "test-001",
-                name: "Empresa de Prueba",
-                active: true
+                nombre: "Empresa de Prueba",
+                empresa_activa: true,
+                usuario_activo: true,
+                rol: ["A1"]
             }
         ],
-        timestamp: Date.now(),
-        ledroitMasterResponse: {
-            success: true,
-            data: {
-                message: "Sesión de prueba creada"
-            }
-        }
+        timestamp: Date.now()
     };
     
     sessionStorage.setItem('ls_session', JSON.stringify(sesionPrueba));
@@ -299,7 +292,7 @@ function validarSesion() {
     
     try {
         const data = JSON.parse(session);
-        const required = ['initials', 'user', 'companies', 'timestamp'];
+        const required = ['iniciales', 'empresas', 'timestamp'];
         const missing = required.filter(field => !data[field]);
         
         if (missing.length > 0) {
@@ -307,7 +300,7 @@ function validarSesion() {
             return false;
         }
         
-        if (!Array.isArray(data.companies) || data.companies.length === 0) {
+        if (!Array.isArray(data.empresas) || data.empresas.length === 0) {
             console.error('❌ No hay empresas activas');
             return false;
         }
@@ -364,20 +357,17 @@ console.log('URLs configuradas:', getConfig('urls'));
 **JSON de prueba:**
 ```json
 {
-    "initials": "TP",
-    "user": "test@prueba.com",
-    "companies": [
+    "iniciales": "TP",
+    "nombre": "Usuario Test",
+    "empresas": [
         {
-            "id": "test-001",
-            "name": "Empresa Test",
-            "active": true
+            "nombre": "Empresa Test",
+            "empresa_activa": true,
+            "usuario_activo": true,
+            "rol": ["A1"]
         }
     ],
-    "timestamp": 1703123456789,
-    "ledroitMasterResponse": {
-        "success": true,
-        "data": {}
-    }
+    "timestamp": 1703123456789
 }
 ```
 

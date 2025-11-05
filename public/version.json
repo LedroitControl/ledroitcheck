@@ -1,5 +1,5 @@
 {
-  "version": "1.2.2",
-  "build": 1730847600000,
-  "notes": "Corrección de textos en modales: 'se cerrará la sesión de este sistema'. Documentación y código de guía actualizados para reflejar el comportamiento de 'Abrir en nueva ventana' y el cierre de sesión en misma ventana."
+  "version": "1.2.4",
+  "build": 1730847600002,
+  "notes": "Corrección en prueba-ingderivado: incluir foto_url desde sesión estándar (ls_session.foto_url o ledroitAuth.user.foto_url)."
 }

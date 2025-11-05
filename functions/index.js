@@ -73,13 +73,14 @@ exports.ingresoDerivado = onRequest({ maxInstances: 10 }, async (req, res) => {
     }
 
     const data = respuesta.data || {};
+    // Sesión estándar en español, acorde a la guía
     const ses = {
-      usuario: data.nombre || data.usuario || (data.user && data.user.nombre) || null,
-      iniciales: data.iniciales || data.initials || (data.user && data.user.iniciales) || null,
-      // Compatibilidad: incluir ambas claves para el avatar según la guía
-      foto_url: data.foto_url || data.avatar || null,
-      avatar: data.foto_url || data.avatar || null,
+      nombre: data.nombre || (data.user && data.user.nombre) || null,
+      iniciales: data.iniciales || (data.user && data.user.iniciales) || null,
+      foto_url: data.foto_url || (data.user && data.user.foto_url) || null,
       empresas: Array.isArray(data.empresas) ? data.empresas : [],
+      timestamp: new Date().toISOString(),
+      sistemaOrigen: respuesta.sistemaOrigen || 'LEDROITCHECK'
     };
 
     // Guardar respaldo en Firestore (colección ya usada en front)
@@ -128,11 +129,6 @@ exports.ingresoDerivado = onRequest({ maxInstances: 10 }, async (req, res) => {
             localStorage.setItem('ls_lastRespuestaLMaster', JSON.stringify(resp));
             sessionStorage.setItem('ls_lastRespuestaLMaster', JSON.stringify(resp));
             if (ses.iniciales) sessionStorage.setItem('iniciales', ses.iniciales);
-            // Gadget necesita userEmpresas en sessionStorage según la guía
-            try {
-              const empresas = (resp && resp.data && Array.isArray(resp.data.empresas)) ? resp.data.empresas : (ses.empresas || []);
-              sessionStorage.setItem('userEmpresas', JSON.stringify(empresas));
-            } catch (e) {}
           } catch (e) {}
           // Redirigir directamente al menú principal
           location.href = '/menu.html';

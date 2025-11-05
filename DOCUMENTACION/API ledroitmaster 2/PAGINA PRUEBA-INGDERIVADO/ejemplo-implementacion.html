@@ -302,22 +302,18 @@ console.log('✅ Configuración cargada:', window.getConfig('sistema').nombre);
             <div class="code-block">
 // Ejemplo de sesión válida
 const sesionEjemplo = {
-    "initials": "AB",
-    "user": "usuario@ejemplo.com",
-    "companies": [
+    "iniciales": "AB",
+    "nombre": "Usuario Ejemplo",
+    "foto_url": "https://...",
+    "empresas": [
         {
-            "id": "123",
-            "name": "Empresa Ejemplo",
-            "active": true
+            "nombre": "Empresa Ejemplo",
+            "empresa_activa": true,
+            "usuario_activo": true,
+            "rol": ["A1"]
         }
     ],
-    "timestamp": Date.now(),
-    "ledroitMasterResponse": {
-        "success": true,
-        "data": {
-            "message": "Sesión iniciada correctamente"
-        }
-    }
+    "timestamp": Date.now()
 };
 
 // Guardar en sessionStorage
@@ -332,13 +328,12 @@ sessionStorage.setItem('ls_session', JSON.stringify(sesionEjemplo));
 // Ejecutar en consola del navegador para testing
 function crearSesionPrueba() {
     const sesion = {
-        initials: "TP",
-        user: "test@prueba.com",
-        companies: [
-            { id: "test-001", name: "Empresa Test", active: true }
+        iniciales: "TP",
+        nombre: "Usuario Test",
+        empresas: [
+            { nombre: "Empresa Test", empresa_activa: true, usuario_activo: true, rol: ["A1"] }
         ],
-        timestamp: Date.now(),
-        ledroitMasterResponse: { success: true, data: {} }
+        timestamp: Date.now()
     };
     
     sessionStorage.setItem('ls_session', JSON.stringify(sesion));
@@ -394,7 +389,7 @@ console.log('Sesión existe:', session ? '✅' : '❌');
 if (session) {
     try {
         const data = JSON.parse(session);
-        const required = ['initials', 'user', 'companies', 'timestamp'];
+        const required = ['iniciales', 'empresas', 'timestamp'];
         const valid = required.every(field => data[field]);
         console.log('Sesión válida:', valid ? '✅' : '❌');
     } catch (e) {
@@ -455,7 +450,7 @@ window.PRUEBA_INGDERIVADO_CONFIG.funcionalidades.logs = false;
 // Solución: Actualizar timestamp en la sesión
 
 // Error: "Empresas no activas"
-// Solución: Verificar array de companies en la sesión
+// Solución: Verificar array de empresas en la sesión
             </div>
             
             <div class="success">

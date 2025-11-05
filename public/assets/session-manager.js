@@ -7,7 +7,6 @@
   function clearSessionStorage() {
     try { sessionStorage.removeItem('ls_session'); } catch {}
     try { sessionStorage.removeItem('ledroitAuth'); } catch {}
-    try { sessionStorage.removeItem('userEmpresas'); } catch {}
   }
 
   function clearLocalSessionFallback() {

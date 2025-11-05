@@ -73,20 +73,18 @@ La página requiere una sesión activa en `sessionStorage` con la siguiente estr
 
 ```javascript
 {
-  "initials": "AB",                    // Iniciales del usuario
-  "user": "usuario@ejemplo.com",       // Email del usuario
-  "companies": [                       // Array de empresas activas
+  "iniciales": "AB",                    // Iniciales del usuario (ESTÁNDAR)
+  "nombre": "Usuario Ejemplo",          // Nombre del usuario (opcional)
+  "foto_url": "https://...",            // URL del avatar (opcional)
+  "empresas": [                          // Array de empresas activas (ESTÁNDAR)
     {
-      "id": "123",
-      "name": "Empresa Ejemplo",
-      "active": true
+      "nombre": "Empresa Ejemplo",
+      "empresa_activa": true,
+      "usuario_activo": true,
+      "rol": ["A1"]
     }
   ],
-  "timestamp": 1703123456789,          // Timestamp de la sesión
-  "ledroitMasterResponse": {           // Respuesta de Ledroit Master
-    "success": true,
-    "data": { /* datos adicionales */ }
-  }
+  "timestamp": 1703123456789             // Timestamp de la sesión
 }
 ```
 
@@ -292,7 +290,7 @@ console.log('Timeout configurado:', config.timeoutHoras);
 ```javascript
 // Verificar estructura de empresas
 const sesion = JSON.parse(sessionStorage.getItem('ls_session'));
-console.log('Empresas:', sesion.companies);
+console.log('Empresas:', sesion.empresas);
 ```
 
 ## 📞 Soporte y Contacto

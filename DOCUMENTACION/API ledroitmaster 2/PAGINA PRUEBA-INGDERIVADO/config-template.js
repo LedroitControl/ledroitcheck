@@ -57,18 +57,18 @@ window.PRUEBA_INGDERIVADO_CONFIG = {
     datos: {
         // Estructura esperada de sesión
         estructuraSesion: {
-            initials: "string",              // Iniciales del usuario
-            user: "string",                  // Usuario
-            companies: "array",              // Array de empresas activas
-            timestamp: "number",             // Timestamp de la sesión
-            ledroitMasterResponse: "object"  // Respuesta de Ledroit Master
+            iniciales: "string",              // Iniciales del usuario (ESTÁNDAR)
+            nombre: "string",                 // Nombre del usuario (opcional)
+            foto_url: "string",               // URL del avatar (opcional)
+            empresas: "array",                // Array de empresas activas (ESTÁNDAR)
+            timestamp: "number"               // Timestamp de la sesión
         },
         
         // Validaciones de empresas
         empresas: {
             minimoRequerido: 1,              // Mínimo de empresas activas
             validarEstructura: true,         // Validar estructura de empresas
-            camposRequeridos: ["id", "name"] // Campos requeridos en cada empresa
+            camposRequeridos: ["nombre", "empresa_activa", "usuario_activo", "rol"] // Campos requeridos en cada empresa (ESTÁNDAR)
         }
     },
     

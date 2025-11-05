@@ -98,18 +98,18 @@
             <strong>Iniciales:</strong> ${ses.iniciales || ''}
           </div>
           <div class="col">
-            <strong>Nombre:</strong> ${ses.usuario || ses.nombre || ''}
+            <strong>Nombre:</strong> ${ses.nombre || ''}
           </div>
           <div class="col">
             <strong>Empresa activa:</strong> ${ses.empresa_activa || '(no definida)'}
           </div>
         `;
         // Notificar al header global con estructura esperada por la guía
-        window.ledroitAuth = {
+          window.ledroitAuth = {
           user: {
-            nombre: ses.usuario || ses.nombre || '',
-            foto_url: ses.foto_url || ses.avatar || null,
-            empresas: ses.empresas || []
+            nombre: ses.nombre || '',
+            foto_url: ses.foto_url || null,
+            empresas: Array.isArray(ses.empresas) ? ses.empresas : []
           },
           iniciales: ses.iniciales || ''
         };
@@ -118,11 +118,7 @@
         try {
           sessionStorage.setItem('ledroitAuth', JSON.stringify(window.ledroitAuth));
         } catch (e) {}
-        // Asegurar que el gadget tenga userEmpresas en sessionStorage
-        try {
-          const empresas = Array.isArray(ses.empresas) ? ses.empresas : [];
-          sessionStorage.setItem('userEmpresas', JSON.stringify(empresas));
-        } catch (e) { console.warn('No se pudo setear userEmpresas'); }
+        // No usar claves no estándar; el gadget usa ledroitAuth/ls_session
       } else {
         $userInfo.innerHTML = '<p class="muted">No hay sesión activa. <a href="login.html">Ingresar</a></p>';
       }
