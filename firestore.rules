@@ -11,6 +11,17 @@ service cloud.firestore {
     match /entradas_salidas/{document} {
       allow read, write: if true; // Para el sistema de registro de personal
     }
+
+    // Fase 4: reglas para jornadas
+    match /jornadas/{empresa}/usuarios/{usuario}/counters/{counterId} {
+      allow read, write: if true; // Contador de folios de jornada por usuario
+    }
+    match /jornadas/{empresa}/usuarios/{usuario}/jornadas/{folio} {
+      allow read, write: if true; // Documentos de jornadas (entrada/salida)
+    }
+    match /jornadas_open/{usuario} {
+      allow read, write: if true; // Índice de jornada abierta por usuario
+    }
     
     // Reglas generales para desarrollo
     match /{document=**} {

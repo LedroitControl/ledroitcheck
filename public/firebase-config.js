@@ -186,6 +186,200 @@ class FirestoreManager {
             return [];
         }
     }
+
+    // =============================
+    // JORNADAS – FASE 1 (BASE)
+    // =============================
+
+    /**
+     * Normaliza iniciales (solo letras a mayúsculas; números/símbolos intactos)
+     */
+    _normalizeIniciales(iniciales = '') {
+        return String(iniciales).replace(/[a-zA-Z]/g, (letra) => letra.toUpperCase());
+    }
+
+    /**
+     * Zero-padding para consecutivo del folio
+     */
+    _padConsecutivo(num, width = 5) {
+        const s = String(num);
+        return s.length >= width ? s : '0'.repeat(width - s.length) + s;
+    }
+
+    /**
+     * Formatea fecha local como YYYYMMDD-HHmmss para folio
+     */
+    _formatLocalDateYYYYMMDDHHmmss(date = new Date()) {
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        const HH = String(date.getHours()).padStart(2, '0');
+        const MM = String(date.getMinutes()).padStart(2, '0');
+        const SS = String(date.getSeconds()).padStart(2, '0');
+        return `${yyyy}${mm}${dd}-${HH}${MM}${SS}`;
+    }
+
+    /**
+     * Obtiene empresa seleccionada por nombre desde ls_session
+     * Si existe empresaSeleccionada, usa esa; si no, retorna la única activa si solo hay una.
+     * Si hay múltiples activas y no se seleccionó, retorna null.
+     */
+    getEmpresaSeleccionadaNombreFromSession() {
+        try {
+            const sesLocal = sessionStorage.getItem('ls_session') || localStorage.getItem('ls_session');
+            if (!sesLocal) return null;
+            const ses = JSON.parse(sesLocal);
+            const seleccionada = ses?.empresaSeleccionada?.nombre;
+            if (seleccionada) return seleccionada;
+            const activas = Array.isArray(ses?.empresas) ? ses.empresas.filter(e => e?.empresa_activa) : [];
+            if (activas.length === 1) return activas[0].nombre;
+            return null; // múltiple o no disponible
+        } catch { return null; }
+    }
+
+    /**
+     * Referencia al índice global de jornada abierta por usuario
+     */
+    _jornadasOpenRef(iniciales) {
+        return this.db.collection('jornadas_open').doc(iniciales);
+    }
+
+    /**
+     * Abre una jornada para un usuario en una empresa dada por nombre
+     * Requiere control previo de geolocalización en móvil desde la UI.
+     * @param {Object} opts
+     * @param {string} opts.empresaNombre - Nombre exacto de la empresa
+     * @param {string} opts.iniciales - Iniciales del usuario
+     * @param {Object} [opts.ubicacion] - { lat, lng, accuracy } (nullables)
+     * @param {Object} [opts.dispositivo] - { isMobile: boolean }
+     * @param {string} [opts.ip] - IP o null
+     * @returns {Promise<{success:boolean, reason?:string, data?:Object}>}
+     */
+    async openJornada(opts = {}) {
+        const { empresaNombre, iniciales, ubicacion = { lat: null, lng: null, accuracy: null }, dispositivo = { isMobile: false }, ip = null } = opts;
+        if (!this.db) return { success: false, reason: 'db_not_initialized' };
+        if (!empresaNombre) return { success: false, reason: 'empresa_required' };
+        if (!iniciales) return { success: false, reason: 'iniciales_required' };
+
+        const userKey = this._normalizeIniciales(iniciales);
+        const openRef = this._jornadasOpenRef(userKey);
+
+        // Bloqueo si ya hay jornada abierta
+        const openSnap = await openRef.get();
+        if (openSnap.exists) {
+            return { success: false, reason: 'already_open', data: openSnap.data() };
+        }
+
+        const counterRef = this.db
+            .collection('jornadas')
+            .doc(empresaNombre)
+            .collection('usuarios')
+            .doc(userKey)
+            .collection('counters')
+            .doc('jornada');
+
+        const jornadasCol = this.db
+            .collection('jornadas')
+            .doc(empresaNombre)
+            .collection('usuarios')
+            .doc(userKey)
+            .collection('jornadas');
+
+        const result = await this.db.runTransaction(async (tx) => {
+            const counterDoc = await tx.get(counterRef);
+            let nextConsecutivo = 1;
+            if (counterDoc.exists) {
+                const data = counterDoc.data();
+                nextConsecutivo = (data?.nextConsecutivo || 0) + 1;
+                // Actualizar si existe
+                tx.update(counterRef, { nextConsecutivo });
+            } else {
+                // Crear si no existe (evita failed-precondition)
+                tx.set(counterRef, { nextConsecutivo });
+            }
+
+            const consecutivoStr = this._padConsecutivo(nextConsecutivo);
+            const fechaStr = this._formatLocalDateYYYYMMDDHHmmss(new Date());
+            const folio = `${consecutivoStr}-${fechaStr}`;
+
+            const jornadaRef = jornadasCol.doc(folio);
+            // Crear jornada (set) y aplicar serverTimestamp vía transform
+            tx.set(jornadaRef, {
+                horaEntrada: firebase.firestore.FieldValue.serverTimestamp(),
+                horaSalida: null,
+                ip: ip || null,
+                ubicacion: {
+                    lat: ubicacion?.lat ?? null,
+                    lng: ubicacion?.lng ?? null,
+                    accuracy: ubicacion?.accuracy ?? null,
+                },
+                dispositivo: { isMobile: !!(dispositivo?.isMobile) },
+                folio,
+                estado: 'abierta',
+                usuario: userKey,
+                empresa: empresaNombre,
+            });
+
+            // Crear índice de jornada abierta
+            tx.set(openRef, {
+                empresaNombre,
+                folio,
+                horaEntrada: firebase.firestore.FieldValue.serverTimestamp(),
+            });
+
+            return { folio };
+        });
+
+        return { success: true, data: { folio: result.folio, empresaNombre, iniciales: userKey } };
+    }
+
+    /**
+     * Cierra la jornada abierta para el usuario
+     * @param {Object} opts
+     * @param {string} opts.iniciales
+     * @returns {Promise<{success:boolean, reason?:string, data?:Object}>}
+     */
+    async closeJornada(opts = {}) {
+        const { iniciales } = opts;
+        if (!this.db) return { success: false, reason: 'db_not_initialized' };
+        if (!iniciales) return { success: false, reason: 'iniciales_required' };
+
+        const userKey = this._normalizeIniciales(iniciales);
+        const openRef = this._jornadasOpenRef(userKey);
+        const openSnap = await openRef.get();
+        if (!openSnap.exists) {
+            return { success: false, reason: 'no_open_jornada' };
+        }
+        const { empresaNombre, folio } = openSnap.data();
+
+        const jornadaRef = this.db
+            .collection('jornadas')
+            .doc(empresaNombre)
+            .collection('usuarios')
+            .doc(userKey)
+            .collection('jornadas')
+            .doc(folio);
+
+        await this.db.runTransaction(async (tx) => {
+            tx.update(jornadaRef, {
+                horaSalida: firebase.firestore.FieldValue.serverTimestamp(),
+                estado: 'cerrada',
+            });
+            tx.delete(openRef);
+        });
+
+        return { success: true, data: { empresaNombre, folio, iniciales: userKey } };
+    }
+
+    /**
+     * Obtiene la jornada abierta (índice) para un usuario
+     */
+    async getJornadaAbierta(iniciales) {
+        if (!this.db || !iniciales) return null;
+        const userKey = this._normalizeIniciales(iniciales);
+        const snap = await this._jornadasOpenRef(userKey).get();
+        return snap.exists ? snap.data() : null;
+    }
 }
 
 // Instancia global del manejador de Firestore
@@ -203,4 +397,39 @@ async function obtenerUltimoIngreso(iniciales) {
 // Exportar para uso en módulos
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { FirestoreManager, firestoreManager };
+}
+
+// Exponer utilidades globales para la UI (fase 1)
+window.FirestoreManager = FirestoreManager;
+window.firestoreManager = firestoreManager;
+window.openJornada = async function(empresaNombre, ubicacion, dispositivo, ip) {
+    try {
+        const sesLocal = sessionStorage.getItem('ls_session') || localStorage.getItem('ls_session');
+        const ses = sesLocal ? JSON.parse(sesLocal) : null;
+        const iniciales = ses?.iniciales;
+        if (!iniciales) {
+            console.error('Sin iniciales en ls_session');
+            return { success: false, reason: 'no_session' };
+        }
+        return await firestoreManager.openJornada({ empresaNombre, iniciales, ubicacion, dispositivo, ip });
+    } catch (e) {
+        console.error('Error en openJornada:', e);
+        return { success: false, reason: 'exception', data: { message: e?.message } };
+    }
+}
+
+window.closeJornada = async function() {
+    try {
+        const sesLocal = sessionStorage.getItem('ls_session') || localStorage.getItem('ls_session');
+        const ses = sesLocal ? JSON.parse(sesLocal) : null;
+        const iniciales = ses?.iniciales;
+        if (!iniciales) {
+            console.error('Sin iniciales en ls_session');
+            return { success: false, reason: 'no_session' };
+        }
+        return await firestoreManager.closeJornada({ iniciales });
+    } catch (e) {
+        console.error('Error en closeJornada:', e);
+        return { success: false, reason: 'exception', data: { message: e?.message } };
+    }
 }

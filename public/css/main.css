@@ -45,7 +45,7 @@ label { font-size: 13px; color: var(--muted); }
 input[type="text"], input[type="url"], textarea, select, button { font-size: 14px; }
 input[type="text"], input[type="url"], textarea, select { padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; transition: border .2s; background: #fff; }
 input[type="text"]:focus, input[type="url"]:focus, textarea:focus, select:focus { border-color: var(--primary-light); }
-.actions { display: flex; gap: 10px; align-items: center; }
+.actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .btn { padding: 10px 14px; border-radius: 8px; border: 1px solid transparent; cursor: pointer; background: var(--primary); color: #fff; font-weight: 600; }
 .btn.secondary { background: #fff; color: var(--primary); border-color: var(--primary); }
 .btn.ghost { background: transparent; color: #fff; border-color: rgba(255,255,255,.4); }
@@ -68,9 +68,9 @@ input[type="text"]:focus, input[type="url"]:focus, textarea:focus, select:focus 
 .toast .toast-content { display: flex; align-items: center; gap: 8px; }
 
 /* Modal (simple) */
-.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; align-items: center; justify-content: center; z-index: 9998; }
+.modal-backdrop { position: fixed; left: 0; right: 0; top: 56px; bottom: 0; background: rgba(0,0,0,.35); display: none; align-items: center; justify-content: center; z-index: 999; }
 .modal-backdrop.show { display: flex; }
-.modal { background: #fff; border-radius: 12px; padding: 16px; width: min(540px, 92vw); box-shadow: 0 14px 40px rgba(0,0,0,.24); }
+.modal { background: #fff; border-radius: 12px; padding: 20px; width: min(760px, 96vw); max-height: calc(100vh - 140px); overflow-y: auto; box-shadow: 0 14px 40px rgba(0,0,0,.24); }
 .modal h3 { margin: 0 0 8px; }
 .modal .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px; }
 

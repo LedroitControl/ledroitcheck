@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inicio — LedroitCheck</title>
+  <meta name="robots" content="noindex" />
+  <script>
+    (function(){
+      try{
+        const s = sessionStorage.getItem('ls_session') || localStorage.getItem('ls_session');
+        const ses = s ? JSON.parse(s) : null;
+        if (ses && ses.iniciales) {
+          location.replace('menu.html');
+        } else {
+          location.replace('login.html');
+        }
+      }catch(e){ location.replace('login.html'); }
+    })();
+  </script>
+</head>
+<body></body>
+</html>

@@ -24,6 +24,7 @@ class GlobalHeaderSystem {
         };
         
         this.session = null;
+        this.empresaSeleccionada = null;
         this.headerElement = null;
         this.headerType = null;
         
@@ -137,6 +138,7 @@ class GlobalHeaderSystem {
         if (this.session) {
             console.log('GlobalHeader: Sesión encontrada para', this.session.iniciales || 'usuario');
             console.log('GlobalHeader: Empresas disponibles:', this.session.empresas?.length || 0);
+            this.loadEmpresaSeleccionadaFromStorage();
         } else {
             console.log('GlobalHeader: Sin sesión activa');
         }
@@ -240,6 +242,9 @@ class GlobalHeaderSystem {
         }
 
         this.headerElement.appendChild(header);
+
+        // Renderizar/actualizar barra flotante de empresa seleccionada
+        this.renderFloatingCompanyBar();
     }
 
     createBrandOnlyHeader() {
@@ -310,14 +315,7 @@ class GlobalHeaderSystem {
             if (initialsElement) initialsElement.textContent = `(${iniciales})`; // ✅ Usar "iniciales"
         }
 
-        // Configurar empresas - buscar en el header completo, no solo en userSection
-        const companiesSection = header.querySelector('.header-companies-section');
-        if (companiesSection) {
-            console.log('GlobalHeader: Encontrada sección de empresas, configurando...');
-            this.setupCompaniesSection(companiesSection);
-        } else {
-            console.warn('GlobalHeader: No se encontró .header-companies-section en el header');
-        }
+        // La empresa seleccionada se muestra en una barra flotante persistente
 
         // Configurar botón de logout
         const logoutBtn = userSection.querySelector('.logout-btn');
@@ -372,40 +370,23 @@ class GlobalHeaderSystem {
             console.warn('GlobalHeader: No hay empresas para mostrar');
             return;
         }
-        
-        const maxVisible = 2;
-        const isCollapsed = empresas.length > maxVisible;
-        
-        // Contenedor para empresas visibles
-        const visibleContainer = document.createElement('div');
-        visibleContainer.className = 'gh-visible-companies';
-        empresas.slice(0, maxVisible).forEach(empresa => {
+        // Render como selector: todas las empresas clicables
+        empresas.forEach(empresa => {
             const companyItem = this.createCompanyItem(empresa);
-            visibleContainer.appendChild(companyItem);
+            companyItem.addEventListener('click', () => this.selectCompany(empresa));
+            companiesList.appendChild(companyItem);
         });
-        companiesList.appendChild(visibleContainer);
-        
-        // Contenedor para empresas ocultas
-        if (isCollapsed) {
-            const hiddenContainer = document.createElement('div');
-            hiddenContainer.className = 'gh-hidden-companies';
-            hiddenContainer.style.display = 'none';
-            empresas.slice(maxVisible).forEach(empresa => {
-                const companyItem = this.createCompanyItem(empresa);
-                hiddenContainer.appendChild(companyItem);
-            });
-            companiesList.appendChild(hiddenContainer);
-            
-            // Botón "Ver X más"
-            const remainingCount = empresas.length - maxVisible;
-            const toggleBtn = document.createElement('button');
-            toggleBtn.className = 'gh-companies-toggle-btn';
-            toggleBtn.textContent = `Ver ${remainingCount} más`;
-            toggleBtn.addEventListener('click', () => this.toggleCompanies(toggleBtn));
-            companiesList.appendChild(toggleBtn);
+
+        console.log('GlobalHeader: Selector de empresas preparado');
+
+        // Abrir/cerrar el selector al hacer clic en el botón
+        const changeBtn = this.headerElement.querySelector('.change-company-btn');
+        if (changeBtn) {
+            changeBtn.onclick = () => {
+                const isVisible = companiesSection.style.display !== 'none';
+                companiesSection.style.display = isVisible ? 'none' : 'flex';
+            };
         }
-        
-        console.log('GlobalHeader: Sección de empresas configurada correctamente');
     }
 
     createCompanyItem(empresa) {
@@ -456,6 +437,12 @@ class GlobalHeaderSystem {
         item.appendChild(companyRoles);
         item.appendChild(document.createTextNode(' - '));
         item.appendChild(userStatus);
+
+        // Deshabilitar selección si inactiva
+        if (!empresaActiva || !usuarioActivo) {
+            item.style.opacity = '0.6';
+            item.style.cursor = 'not-allowed';
+        }
 
         return item;
     }
@@ -543,6 +530,13 @@ class GlobalHeaderSystem {
             await this.getSession();
             this.createHeader();
         });
+
+        // Cambio de empresa seleccionada
+        window.addEventListener('empresaSeleccionadaChanged', async (ev) => {
+            console.log('GlobalHeader: empresaSeleccionadaChanged', ev.detail);
+            await this.getSession();
+            this.createHeader();
+        });
     }
 
     // Método público para refrescar el header
@@ -564,9 +558,6 @@ class GlobalHeaderSystem {
                     <div class="user-info">
                         <div class="user-name"></div>
                         <div class="user-initials"></div>
-                    </div>
-                    <div class="header-companies-section">
-                        <div class="companies-list"></div>
                     </div>
                     <button class="logout-btn">Cerrar Sesión</button>
                 </div>
@@ -653,6 +644,116 @@ window.refreshGlobalHeader = function() {
 
 window.dispatchHeaderRefresh = function() {
     window.dispatchEvent(new CustomEvent('globalHeaderRefresh'));
+};
+
+// Utilidades para empresa seleccionada
+GlobalHeaderSystem.prototype.loadEmpresaSeleccionadaFromStorage = function() {
+    try {
+        const raw = sessionStorage.getItem('ls_session') || localStorage.getItem('ls_session');
+        const ses = raw ? JSON.parse(raw) : null;
+        this.empresaSeleccionada = ses && ses.empresaSeleccionada ? ses.empresaSeleccionada : null;
+    } catch {}
+};
+
+GlobalHeaderSystem.prototype.renderFloatingCompanyBar = function() {
+    // Actualizar estado local desde storage
+    this.loadEmpresaSeleccionadaFromStorage();
+
+    const barId = 'company-floating-bar';
+    let bar = document.getElementById(barId);
+
+    if (!this.empresaSeleccionada || !this.empresaSeleccionada.nombre) {
+        // No hay empresa seleccionada: remover barra si existe
+        if (bar) { try { bar.remove(); } catch {} }
+        return;
+    }
+
+    // Construir contenido
+    const nombre = this.empresaSeleccionada.nombre || '—';
+    let rolTexto = '';
+    const rol = this.empresaSeleccionada.rol;
+    if (Array.isArray(rol)) rolTexto = rol.join(', ');
+    else if (typeof rol === 'string') rolTexto = rol;
+
+    const inner = `
+        <span class="cfb-label">Empresa:</span>
+        <span class="cfb-name">${nombre}</span>
+        ${rolTexto ? `<span class="cfb-role">rol: ${rolTexto}</span>` : ''}
+        <button class="cfb-change" type="button">Cambiar</button>
+    `;
+
+    if (!bar) {
+        bar = document.createElement('div');
+        bar.id = barId;
+        bar.className = 'company-floating-bar';
+        bar.innerHTML = inner;
+        // Insertar al inicio del body (después del header container)
+        try {
+            if (this.headerElement && this.headerElement.parentNode) {
+                this.headerElement.parentNode.insertBefore(bar, this.headerElement.nextSibling);
+            } else {
+                document.body.insertBefore(bar, document.body.firstChild);
+            }
+        } catch {
+            document.body.appendChild(bar);
+        }
+    } else {
+        bar.innerHTML = inner;
+    }
+
+    // Hook del botón Cambiar
+    const btn = bar.querySelector('.cfb-change');
+    if (btn) {
+        btn.onclick = () => this.handleChangeCompany();
+    }
+};
+
+GlobalHeaderSystem.prototype.handleChangeCompany = function() {
+    console.log('GlobalHeader: Botón "Cambiar" presionado. Reiniciando selección de empresa...');
+    try {
+        const raw = sessionStorage.getItem('ls_session') || localStorage.getItem('ls_session');
+        const ses = raw ? JSON.parse(raw) : null;
+        if (ses) {
+            delete ses.empresaSeleccionada;
+            sessionStorage.setItem('ls_session', JSON.stringify(ses));
+        }
+    } catch (e) {
+        console.warn('GlobalHeader: No se pudo limpiar empresaSeleccionada del storage', e);
+    }
+
+    // Notificar cambio
+    try { window.dispatchEvent(new CustomEvent('empresaSeleccionadaChanged', { detail: null })); } catch {}
+
+    // Feedback opcional
+    try { if (typeof window.showToast === 'function') window.showToast('Seleccione una empresa en BIENVENIDA'); } catch {}
+
+    // Redirigir a menú para reiniciar flujo BIENVENIDA
+    try { window.location.href = 'menu.html'; } catch {}
+};
+
+GlobalHeaderSystem.prototype.selectCompany = function(empresa) {
+    if (!empresa || empresa.empresa_activa === false || empresa.usuario_activo === false) return;
+    const selected = {
+        nombre: empresa.nombre || '—',
+        rol: empresa.rol || []
+    };
+    try {
+        const raw = sessionStorage.getItem('ls_session') || localStorage.getItem('ls_session');
+        const ses = raw ? JSON.parse(raw) : null;
+        if (ses) {
+            ses.empresaSeleccionada = selected;
+            sessionStorage.setItem('ls_session', JSON.stringify(ses));
+            // Notificar cambio
+            window.dispatchEvent(new CustomEvent('empresaSeleccionadaChanged', { detail: selected }));
+        }
+    } catch {}
+
+    // Cerrar selector si abierto
+    const companiesSection = this.headerElement.querySelector('.header-companies-section');
+    if (companiesSection) companiesSection.style.display = 'none';
+
+    // Redirigir a menú para reiniciar el flujo BIENVENIDA
+    try { window.location.href = 'menu.html'; } catch {}
 };
 
 // Auto-inicialización cuando el DOM esté listo

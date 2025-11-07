@@ -86,6 +86,53 @@
     flex-shrink: 0;
 }
 
+/* Empresa seleccionada */
+.header-company-selected {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(59, 130, 246, 0.08);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    padding: 6px 10px;
+    border-radius: 8px;
+}
+
+.selected-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.selected-name {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.selected-role {
+    font-size: 0.75rem;
+    color: #1d4ed8;
+    background: #eff6ff;
+    border: 1px solid rgba(29, 78, 216, 0.15);
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+
+.change-company-btn {
+    margin-left: 4px;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.change-company-btn:hover {
+    background: #2563eb;
+}
+
 /* Avatar del usuario */
 .user-avatar {
     width: 40px; /* compactar avatar */
@@ -146,11 +193,20 @@
    ========================================================================== */
 
 .header-companies-section {
-    display: flex;
+    display: none; /* oculto por defecto, se muestra al abrir selector */
     flex-direction: column;
     align-items: flex-end;
-    min-width: 200px;
-    max-width: 400px;
+    min-width: 220px;
+    max-width: 420px;
+    position: absolute;
+    right: 16px;
+    top: 64px;
+    z-index: 1001;
+    background: #fff;
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    padding: 8px;
 }
 
 .companies-list {
@@ -170,16 +226,63 @@
 .gh-company-line {
     font-size: 12px;
     color: #374151;
-    padding: 4px 8px;
-    background: rgba(255, 255, 255, 0.8);
-    border-radius: 4px;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 6px;
     border-left: 3px solid #10b981;
-    text-align: right;
+    text-align: left;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
+    cursor: pointer;
 }
+
+/* Barra flotante de empresa seleccionada (persistente entre páginas) */
+.company-floating-bar {
+    position: fixed;
+    top: 56px; /* debajo del header sticky */
+    left: 0;
+    right: 0;
+    z-index: 1001; /* por encima del backdrop del modal (999) */
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    background: rgba(59, 130, 246, 0.10);
+    border-bottom: 1px solid rgba(59, 130, 246, 0.25);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+.company-floating-bar .cfb-label {
+    font-size: 0.8rem;
+    color: #374151;
+}
+.company-floating-bar .cfb-name {
+    font-weight: 700;
+    color: #111827;
+}
+.company-floating-bar .cfb-role {
+    font-size: 0.75rem;
+    color: #1d4ed8;
+    background: #eff6ff;
+    border: 1px solid rgba(29, 78, 216, 0.15);
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+.company-floating-bar .cfb-change {
+    margin-left: auto;
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.company-floating-bar .cfb-change:hover { background: #1d4ed8; }
 
 .gh-company-line.gh-company-inactive {
     color: #6b7280;
@@ -365,10 +468,12 @@
         min-height: 56px;
         gap: 8px;
     }
-    
-    /* Ocultar completamente la sección de empresas en móvil */
+
+    /* El selector se mostrará como dropdown flotante cuando se abra */
     .header-companies-section {
-        display: none !important;
+        right: 8px;
+        top: 56px;
+        max-width: calc(100vw - 16px);
     }
     
     /* Sección de marca - Solo icono si existe */
