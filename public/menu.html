@@ -599,36 +599,32 @@
         if (backdrop._timerInterval) { clearInterval(backdrop._timerInterval); backdrop._timerInterval = null; }
         const activas = getEmpresaActivas(ses);
         const detail = ev?.detail || {};
-        // Si el evento indica cierre, actualizar UI inmediatamente a "cerrada" o "selector"
+        // Si el evento indica cierre, actualizar UI inmediatamente a "cerrada" o "selector" SIN parpadeo
         if (detail.status === 'closed') {
           if (activas.length > 1) {
-            // Múltiples empresas: forzar selector y cargar última jornada
-            renderBienvenida(backdrop, ses, { modo:'selector' });
+            // Múltiples empresas: obtener "última" primero y renderizar una sola vez
+            let ultima = null;
             try {
               if (window.firestoreManager && typeof window.firestoreManager.getUltimaJornada === 'function'){
-                const ultima = await window.firestoreManager.getUltimaJornada(ses.iniciales);
-                if (backdrop.dataset.mode === 'selector' && ultima) {
-                  renderBienvenida(backdrop, ses, { modo:'selector', ultima });
-                }
+                ultima = await window.firestoreManager.getUltimaJornada(ses.iniciales);
               }
             } catch {}
+            const opts = ultima ? { modo:'selector', ultima } : { modo:'selector' };
+            renderBienvenida(backdrop, ses, opts);
           } else {
-            // Una sola empresa: modo cerrada + reloj + última jornada
-            renderBienvenida(backdrop, ses, { modo:'cerrada' });
-            iniciarReloj(backdrop.querySelector('#relojAhora'));
+            // Una sola empresa: obtener "última" primero, luego render cerrada y preparar reloj/botón
             const unica = activas[0];
+            let ultima = null;
+            try {
+              if (window.firestoreManager && typeof window.firestoreManager.getUltimaJornada === 'function'){
+                ultima = await window.firestoreManager.getUltimaJornada(ses.iniciales);
+              }
+            } catch {}
+            const opts = ultima ? { modo:'cerrada', ultima } : { modo:'cerrada' };
+            renderBienvenida(backdrop, ses, opts);
+            iniciarReloj(backdrop.querySelector('#relojAhora'));
             try { setEmpresaSeleccionadaEnSesion(unica?.nombre || null, unica?.rol || []); } catch {}
             window.bindAbrir(backdrop.querySelector('#btnAbrir'), unica?.nombre || null);
-            try {
-              if (window.firestoreManager && typeof window.firestoreManager.getUltimaJornada === 'function'){
-                const ultima = await window.firestoreManager.getUltimaJornada(ses.iniciales);
-                if (backdrop.dataset.mode === 'cerrada' && ultima) {
-                  renderBienvenida(backdrop, ses, { modo:'cerrada', ultima });
-                  iniciarReloj(backdrop.querySelector('#relojAhora'));
-                  window.bindAbrir(backdrop.querySelector('#btnAbrir'), unica?.nombre || null);
-                }
-              }
-            } catch {}
           }
           return; // Ya actualizamos UI por cierre; no consultar abierta
         }

@@ -846,31 +846,29 @@ GlobalHeaderSystem.prototype.handleChangeCompany = async function() {
             // Limpiar selección previa si hay varias
             if (activas.length > 1) {
                 try { ses.empresaSeleccionada = null; sessionStorage.setItem('ls_session', JSON.stringify(ses)); } catch {}
-                window.renderBienvenida(backdrop, ses, { modo:'selector' });
-                // Cargar última jornada para mostrar en el selector
+                // Obtener "Última jornada" primero para evitar parpadeos y renderizar una sola vez
+                let ultima = null;
                 try {
                     if (window.firestoreManager && typeof window.firestoreManager.getUltimaJornada === 'function'){
-                        const ultima = await window.firestoreManager.getUltimaJornada(ses.iniciales);
-                        if (ultima && (backdrop.dataset.mode === 'selector' || backdrop.dataset.forceSelector === '1')) {
-                            window.renderBienvenida(backdrop, ses, { modo:'selector', ultima });
-                        }
+                        ultima = await window.firestoreManager.getUltimaJornada(ses.iniciales);
                     }
                 } catch {}
+                const opts = ultima ? { modo:'selector', ultima } : { modo:'selector' };
+                window.renderBienvenida(backdrop, ses, opts);
             } else {
                 const unica = activas[0];
                 try { ses.empresaSeleccionada = { nombre: unica?.nombre || '—', rol: unica?.rol || [] }; sessionStorage.setItem('ls_session', JSON.stringify(ses)); } catch {}
                 // Si solo hay una empresa activa, no forzamos el selector
                 try { delete backdrop.dataset.forceSelector; } catch {}
-                window.renderBienvenida(backdrop, ses, { modo:'cerrada' });
-                // Mostrar última jornada
+                // Obtener "Última jornada" primero y renderizar una sola vez
+                let ultima = null;
                 try {
                     if (window.firestoreManager && typeof window.firestoreManager.getUltimaJornada === 'function'){
-                        const ultima = await window.firestoreManager.getUltimaJornada(ses.iniciales);
-                        if (ultima && backdrop.dataset.mode === 'cerrada') {
-                            window.renderBienvenida(backdrop, ses, { modo:'cerrada', ultima });
-                        }
+                        ultima = await window.firestoreManager.getUltimaJornada(ses.iniciales);
                     }
                 } catch {}
+                const opts = ultima ? { modo:'cerrada', ultima } : { modo:'cerrada' };
+                window.renderBienvenida(backdrop, ses, opts);
             }
             try { window.showToast && window.showToast('Seleccione empresa o abra/cierre su jornada según corresponda', 'info'); } catch {}
         } else {
