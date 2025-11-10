@@ -1063,7 +1063,7 @@ GlobalHeaderSystem.prototype.setupRealtimeJornadaWatcher = function() {
 GlobalHeaderSystem.prototype.confirmModal = function({ title = 'Confirmación', content = '', okText = 'Aceptar', cancelText = 'Cancelar' } = {}) {
     return new Promise((resolve) => {
         const backdrop = document.createElement('div');
-        backdrop.className = 'modal-backdrop';
+        backdrop.className = 'gh-modal-backdrop';
         backdrop.innerHTML = `
             <div class="modal" role="dialog" aria-modal="true">
               <h3>${title}</h3>
@@ -1120,7 +1120,7 @@ if (typeof window.handleCloseJornada !== 'function') {
             // Loader ligero
             const loader = (() => {
                 const bd = document.createElement('div');
-                bd.className = 'modal-backdrop';
+                bd.className = 'gh-modal-backdrop';
                 bd.innerHTML = `
                   <div class="modal" role="dialog" aria-modal="true" style="max-width:420px">
                     <h3>Cerrando jornada…</h3>
