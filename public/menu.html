@@ -599,6 +599,39 @@
         if (backdrop._timerInterval) { clearInterval(backdrop._timerInterval); backdrop._timerInterval = null; }
         const activas = getEmpresaActivas(ses);
         const detail = ev?.detail || {};
+        // Si el evento indica cierre, actualizar UI inmediatamente a "cerrada" o "selector"
+        if (detail.status === 'closed') {
+          if (activas.length > 1) {
+            // Múltiples empresas: forzar selector y cargar última jornada
+            renderBienvenida(backdrop, ses, { modo:'selector' });
+            try {
+              if (window.firestoreManager && typeof window.firestoreManager.getUltimaJornada === 'function'){
+                const ultima = await window.firestoreManager.getUltimaJornada(ses.iniciales);
+                if (backdrop.dataset.mode === 'selector' && ultima) {
+                  renderBienvenida(backdrop, ses, { modo:'selector', ultima });
+                }
+              }
+            } catch {}
+          } else {
+            // Una sola empresa: modo cerrada + reloj + última jornada
+            renderBienvenida(backdrop, ses, { modo:'cerrada' });
+            iniciarReloj(backdrop.querySelector('#relojAhora'));
+            const unica = activas[0];
+            try { setEmpresaSeleccionadaEnSesion(unica?.nombre || null, unica?.rol || []); } catch {}
+            window.bindAbrir(backdrop.querySelector('#btnAbrir'), unica?.nombre || null);
+            try {
+              if (window.firestoreManager && typeof window.firestoreManager.getUltimaJornada === 'function'){
+                const ultima = await window.firestoreManager.getUltimaJornada(ses.iniciales);
+                if (backdrop.dataset.mode === 'cerrada' && ultima) {
+                  renderBienvenida(backdrop, ses, { modo:'cerrada', ultima });
+                  iniciarReloj(backdrop.querySelector('#relojAhora'));
+                  window.bindAbrir(backdrop.querySelector('#btnAbrir'), unica?.nombre || null);
+                }
+              }
+            } catch {}
+          }
+          return; // Ya actualizamos UI por cierre; no consultar abierta
+        }
         // Si el evento indica apertura inmediatamente, actualizar UI sin esperar consulta
         if (detail.status === 'open') {
           if (backdrop.dataset && backdrop.dataset.forceSelector === '1') {
@@ -632,7 +665,7 @@
           setEmpresaSeleccionadaEnSesion(openInfo.empresaNombre, rolesOpen);
           renderBienvenida(backdrop, JSON.parse(sessionStorage.getItem('ls_session')||localStorage.getItem('ls_session')), { modo:'abierta', info: openInfo });
           iniciarTimer(backdrop.querySelector('#timerJornada'), openInfo?.horaEntrada);
-          bindCerrar(backdrop.querySelector('#btnCerrar'));
+          window.bindCerrar(backdrop.querySelector('#btnCerrar'));
           }
         } else {
           if (activas.length > 1){
