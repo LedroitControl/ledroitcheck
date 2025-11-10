@@ -1137,7 +1137,10 @@ if (typeof window.handleCloseJornada !== 'function') {
             const res = await window.closeJornada();
             loader.close();
             if (!res?.success) {
-                try { window.showToast && window.showToast('No se pudo cerrar la jornada', 'error'); } catch {}
+                try {
+                    const msg = 'No se pudo cerrar la jornada' + (res?.reason ? `: ${res.reason}` : '');
+                    window.showToast && window.showToast(msg, 'error');
+                } catch {}
                 return false;
             }
             try { window.showToast && window.showToast('Jornada cerrada', 'success'); } catch {}
