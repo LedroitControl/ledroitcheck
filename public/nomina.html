@@ -7,7 +7,23 @@
   <link rel="stylesheet" href="css/main.css" />
   <link rel="icon" type="image/svg+xml" href="assets/logo-ledroitcheck.svg" />
   <link rel="stylesheet" href="assets/global-header.css" />
-  <script src="assets/global-header.js"></script>
+  <!-- SDK Firebase necesario para mostrar estado de jornada en el header -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="firebase-config.js"></script>
+  <script>
+    // Carga con bust de caché para asegurar última versión del header
+    (function(){
+      function loadHeader(v){
+        var s=document.createElement('script');
+        s.src='assets/global-header.js?v='+(v||Date.now());
+        document.head.appendChild(s);
+      }
+      fetch('version.json?v='+Date.now()).then(function(r){return r.json();}).then(function(info){
+        loadHeader(info.version||Date.now());
+      }).catch(function(){ loadHeader(Date.now()); });
+    })();
+  </script>
 </head>
 <body>
   <script>

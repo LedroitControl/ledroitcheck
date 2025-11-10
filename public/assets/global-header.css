@@ -13,7 +13,7 @@
 .global-header-container {
     position: sticky;
     top: 0;
-    z-index: 1000;
+    z-index: 1500; /* por debajo de los modales (2000) para que las confirmaciones se vean y se puedan clicar */
     width: 100%;
 }
 
@@ -34,6 +34,61 @@
     min-height: 56px; /* más angosto */
     box-sizing: border-box;
 }
+
+/* Sección central de estado de jornada */
+.header-center-status {
+    flex: 1 1 auto;
+    text-align: center;
+    min-height: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: #1f2937;
+    padding: 2px 0;
+}
+.header-center-status .jornada-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(0,0,0,0.08);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.header-center-status .jornada-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.header-center-status .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981; /* verde activo */
+    box-shadow: 0 0 0 2px rgba(16,185,129,0.25);
+}
+.header-center-status .status-dot.inactive { background: #6b7280; box-shadow: 0 0 0 2px rgba(107,114,128,0.2); }
+.header-center-status .jornada-label { font-size: 0.80rem; color: #ffffff; }
+/* Cuando la tarjeta de jornada abierta está presente, el texto es oscuro sobre fondo claro */
+.header-center-status .jornada-card .jornada-label { color: #111827; }
+.header-center-status .jornada-empresa { font-size: 0.85rem; font-weight: 700; }
+.header-center-status .jornada-timer { font-family: monospace; font-weight: 700; font-size: 0.9rem; }
+/* Botón para cerrar jornada cuando esté abierta */
+.close-shift-btn {
+    padding: 4px 8px;
+    font-size: 0.72rem;
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.close-shift-btn:hover { background: #dc2626; }
 
 /* ===========================================================================
    SECCIÓN DE MARCA/BRAND
@@ -56,7 +111,7 @@
 .brand-name {
     font-size: 1.125rem; /* tipografía más pequeña */
     font-weight: 700;
-    color: #1f2937;
+    color: #ffffff;
     letter-spacing: -0.025em;
     margin: 0;
 }
@@ -69,7 +124,7 @@
 
 .brand-subtitle {
     font-size: 0.75rem;
-    color: #6b7280;
+    color: #ffffff;
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -89,32 +144,42 @@
 /* Empresa seleccionada */
 .header-company-selected {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
     background: rgba(59, 130, 246, 0.08);
     border: 1px solid rgba(59, 130, 246, 0.2);
     padding: 6px 10px;
     border-radius: 8px;
 }
 
+.header-company-selected .selected-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .selected-label {
-    font-size: 0.75rem;
-    color: #6b7280;
+    font-size: 0.70rem;
+    color: #ffffff;
+    display: block;
 }
 
 .selected-name {
-    font-size: 0.875rem;
+    font-size: 0.85rem;
     font-weight: 700;
-    color: #1f2937;
+    color: #ffffff;
+    display: block;
 }
 
 .selected-role {
     font-size: 0.75rem;
-    color: #1d4ed8;
-    background: #eff6ff;
-    border: 1px solid rgba(29, 78, 216, 0.15);
+    color: #ffffff;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.35);
     padding: 2px 6px;
     border-radius: 6px;
+    display: inline-block;
 }
 
 .change-company-btn {
@@ -178,13 +243,13 @@
 .user-name {
     font-size: 0.875rem;
     font-weight: 600;
-    color: #1f2937;
+    color: #ffffff;
     line-height: 1.2;
 }
 
 .user-initials {
     font-size: 0.75rem;
-    color: #6b7280;
+    color: #ffffff;
     font-weight: 500;
 }
 
@@ -468,6 +533,27 @@
         min-height: 56px;
         gap: 8px;
     }
+    /* Asegurar el orden de las secciones en móvil: [Brand] [Jornada] [Usuario] */
+    .header-brand-section { order: 1; }
+    .header-center-status { order: 2; }
+    .header-user-section { order: 3; margin-left: auto; }
+
+    /* Marca en columna y avatar debajo del logo */
+    .header-brand-section {
+        display: grid;
+        grid-template-columns: auto;
+        grid-auto-rows: auto;
+        align-items: start;
+    }
+    .brand-avatar {
+        display: block;
+        width: 36px;
+        height: 36px;
+        font-size: 0.75rem;
+        margin-top: 4px;
+    }
+    /* Ocultar avatar del bloque de usuario en móvil para ahorrar espacio */
+    .header-user-section .user-avatar { display: none; }
 
     /* El selector se mostrará como dropdown flotante cuando se abra */
     .header-companies-section {
@@ -497,10 +583,13 @@
         display: none;
     }
     
-    /* Sección de usuario - Compacta */
+    /* Sección de usuario - Reconfigurada para responsive */
     .header-user-section {
-        gap: 12px;
+        gap: 8px;
         flex-shrink: 0;
+        flex-wrap: nowrap;
+        flex-direction: column; /* apilar a la derecha */
+        align-items: flex-end; /* alinear a la derecha */
     }
     
     .user-avatar {
@@ -510,18 +599,10 @@
     }
     
     .user-info {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        gap: 8px;
-        min-width: auto;
+        display: none; /* ocultar bloque de nombre para ganar espacio */
     }
     
-    .user-name {
-        font-size: 0.75rem;
-        font-weight: 600;
-        white-space: nowrap;
-    }
+    .user-name { display: none; }
     
     .user-initials {
         font-size: 0.625rem;
@@ -536,6 +617,24 @@
         padding: 6px 10px;
         font-size: 0.625rem;
         white-space: nowrap;
+        order: 3; /* ubicar debajo del recuadro de empresa */
+        align-self: flex-end;
+    }
+
+    /* Empresa seleccionada a la derecha */
+    .header-company-selected {
+        order: 2;
+        align-self: flex-end;
+        width: auto;
+        max-width: 60vw;
+    }
+
+    /* Estado de jornada en el centro, entre marca y usuario */
+    .header-center-status {
+        flex: 0 1 auto;
+        align-items: flex-start; /* a la izquierda en móvil */
+        text-align: left;
+        pointer-events: auto; /* asegurar clics sobre el botón "Cerrar jornada" */
     }
 }
 
@@ -675,6 +774,36 @@
     animation: fadeInDown 0.3s ease-out;
 }
 
+/* ==========================================================================
+   MODAL LIGERA PARA CONFIRMACIÓN
+   ==========================================================================
+*/
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.14s ease;
+    z-index: 2000;
+}
+.modal-backdrop.show { opacity: 1; }
+.modal {
+    background: #fff;
+    border-radius: 10px;
+    padding: 16px;
+    max-width: 320px;
+    width: calc(100vw - 48px);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.2);
+}
+.modal h3 { margin: 0 0 8px; font-size: 1rem; color: #111827; }
+.modal-body { font-size: 0.85rem; color: #374151; margin-bottom: 12px; }
+.modal-footer { display: flex; gap: 8px; justify-content: flex-end; }
+.btn { padding: 6px 12px; border-radius: 6px; border: none; background: #3b82f6; color: #fff; cursor: pointer; font-size: 0.8rem; }
+.btn.secondary { background: #e5e7eb; color: #111827; }
+
 /* ===========================================================================
    MODO OSCURO (OPCIONAL)
    ========================================================================== */
@@ -735,3 +864,5 @@
         color: #6b7280;
     }
 }
+/* Por defecto, ocultar el avatar bajo la marca en escritorio */
+.brand-avatar { display: none; }

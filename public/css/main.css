@@ -68,9 +68,10 @@ input[type="text"]:focus, input[type="url"]:focus, textarea:focus, select:focus 
 .toast .toast-content { display: flex; align-items: center; gap: 8px; }
 
 /* Modal (simple) */
-.modal-backdrop { position: fixed; left: 0; right: 0; top: 56px; bottom: 0; background: rgba(0,0,0,.35); display: none; align-items: center; justify-content: center; z-index: 999; }
+.modal-backdrop { position: fixed; left: 0; right: 0; top: 56px; bottom: 0; background: rgba(0,0,0,.35); display: none; align-items: center; justify-content: center; z-index: 4000; }
 .modal-backdrop.show { display: flex; }
-.modal { background: #fff; border-radius: 12px; padding: 20px; width: min(760px, 96vw); max-height: calc(100vh - 140px); overflow-y: auto; box-shadow: 0 14px 40px rgba(0,0,0,.24); }
+.welcome-backdrop { z-index: 4000 !important; top: 56px !important; }
+.modal { background: #fff; border-radius: 16px; padding: 24px; width: min(1600px, 98vw); max-height: calc(100vh - 160px); overflow-y: auto; box-shadow: 0 18px 50px rgba(0,0,0,.28); }
 .modal h3 { margin: 0 0 8px; }
 .modal .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px; }
 
@@ -90,3 +91,78 @@ input[type="text"]:focus, input[type="url"]:focus, textarea:focus, select:focus 
 
 /* Code block */
 pre { background: #0b1020; color: #cce3ff; padding: 12px; border-radius: 10px; overflow: auto; border: 1px solid #1f2937; }
+
+/* Modal Bienvenida profesional */
+.modal-welcome { position: relative; }
+.modal.modal-welcome { width: min(1600px, 98vw) !important; max-width: none !important; }
+.welcome-hero { margin: -8px -8px 16px; }
+.welcome-hero-image { width: 100%; max-height: 160px; display: block; object-fit: contain; border-radius: 10px; background: linear-gradient(180deg, rgba(0,0,0,.04), rgba(0,0,0,.08)); box-shadow: inset 0 1px 0 rgba(255,255,255,.4); }
+.welcome-hero-placeholder { height: 220px; display: flex; align-items: center; justify-content: center; font-size: 48px; font-weight: 800; color: #fff; border-radius: 10px; background: linear-gradient(45deg, var(--primary), var(--primary-dark)); }
+
+.welcome-title { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+.welcome-user-name { font-size: 16px; font-weight: 700; }
+.welcome-user-initials { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+
+.welcome-section { margin: 10px 0; }
+.notice-open { background: #fff8e1; color: #7c4a00; border: 1px solid #ffe082; padding: 10px 12px; border-radius: 10px; margin: 10px 0; }
+
+.actions a.btn.secondary { border-width: 2px; }
+.btn.btn-pill { display: inline-flex; align-items: center; gap: 8px; background: #fff; color: var(--primary-dark); border: 2px solid var(--primary); padding: 10px 14px; border-radius: 999px; font-weight: 700; transition: transform .15s ease, box-shadow .15s ease; }
+.btn.btn-pill:hover { transform: translateY(-1px); box-shadow: 0 8px 22px rgba(0,0,0,.08); }
+
+.centered-actions { display: flex; align-items: center; justify-content: center; margin: 10px 0; }
+.btn.btn-primary-large { background: linear-gradient(180deg, var(--primary), var(--primary-dark)); border: none; padding: 14px 20px; font-size: 16px; border-radius: 12px; box-shadow: 0 10px 24px rgba(46,125,50,.3); }
+.btn.btn-danger-large { background: linear-gradient(180deg, #ef4444, #b91c1c); border: none; padding: 14px 20px; font-size: 16px; border-radius: 12px; box-shadow: 0 10px 24px rgba(185,28,28,.3); }
+.btn.btn-primary-large:hover, .btn.btn-danger-large:hover { filter: brightness(1.05); transform: translateY(-1px); }
+
+.clock-container { text-align: center; margin: 8px 0 14px; }
+.clock-label { font-size: 13px; color: var(--muted); }
+.clock-large { font-family: 'Share Tech Mono', 'Orbitron', Consolas, Monaco, 'Courier New', monospace; font-size: clamp(48px, 7vw, 84px); letter-spacing: 2px; padding: 8px 16px; border-radius: 12px; background: #0b1020; color: #b6f2ff; text-shadow: 0 0 8px rgba(59,130,246,.7); box-shadow: inset 0 0 10px rgba(0,0,0,.6), 0 10px 24px rgba(0,0,0,.18); display: inline-block; animation: clockGlow 2.2s ease-in-out infinite, clockTick 1s steps(1, end) infinite; }
+
+@keyframes clockGlow {
+  0% { text-shadow: 0 0 6px rgba(59,130,246,.6), 0 0 12px rgba(59,130,246,.3); }
+  50% { text-shadow: 0 0 18px rgba(59,130,246,.9), 0 0 28px rgba(59,130,246,.5); }
+  100% { text-shadow: 0 0 6px rgba(59,130,246,.6), 0 0 12px rgba(59,130,246,.3); }
+}
+@keyframes clockTick {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.01); }
+}
+
+.welcome-last { border-top: 1px dashed var(--border); padding-top: 12px; margin-top: 12px; }
+.last-title { font-weight: 800; margin-bottom: 8px; }
+.last-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 12px; }
+.last-grid span { color: var(--muted); font-size: 12px; }
+
+/* Font import for digital clock */
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@600;700&display=swap');
+.welcome-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.welcome-left { }
+.welcome-right { display: grid; gap: 6px; }
+.actions-center { display: flex; justify-content: center; align-items: center; }
+.btn.btn-company { display: inline-flex; align-items: center; gap: 8px; color: #fff; padding: 12px 16px; border-radius: 12px; border: none; font-weight: 700; background: linear-gradient(180deg, var(--comp-color), var(--comp-color-dark)); box-shadow: 0 8px 22px rgba(0,0,0,.12); transition: transform .12s ease, box-shadow .12s ease, filter .12s ease; }
+.btn.btn-company:hover { transform: translateY(-1px); filter: brightness(1.05); box-shadow: 0 12px 28px rgba(0,0,0,.16); }
+.btn.btn-company svg { opacity: .9; }
+
+/* Responsive: apilar contenido de Bienvenida en pantallas pequeñas
+   - Imagen arriba
+   - Nombre e iniciales debajo
+   - "Última jornada" debajo de ambos (sin solaparse con el header) */
+@media (max-width: 768px) {
+  .welcome-grid { grid-template-columns: 1fr; }
+  .welcome-left { order: 1; }
+  .welcome-right { order: 2; }
+  .welcome-hero { margin: 0 0 12px; }
+  .welcome-last { margin-top: 8px; }
+  /* Centrar "Bienvenido", el nombre y las iniciales en móvil */
+  .welcome-title,
+  .welcome-user-name,
+  .welcome-user-initials { text-align: center; display: block; }
+  .welcome-user-initials { margin-left: auto; margin-right: auto; }
+}
+
+/* Animación spinner para modales de carga */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

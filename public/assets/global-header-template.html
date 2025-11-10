@@ -13,11 +13,16 @@
     <!-- Sección de Marca/Brand -->
     <div class="header-brand-section">
         <img src="" alt="" class="brand-logo" />
+        <!-- Avatar compacto bajo el logo (solo móvil) -->
+        <div class="user-avatar brand-avatar" title="Usuario"></div>
         <div class="brand-info">
             <span class="brand-name"></span>
             <span class="brand-subtitle">Sistema de nómina</span>
         </div>
     </div>
+
+    <!-- Estado central: jornada abierta y temporizador -->
+    <div class="header-center-status" aria-live="polite"></div>
 
     <!-- Sección de Usuario -->
     <div class="header-user-section">
@@ -28,6 +33,16 @@
         <div class="user-info">
             <div class="user-name">Cargando...</div>
             <div class="user-initials">(--)</div>
+        </div>
+
+        <!-- Empresa seleccionada (integrada al header) -->
+        <div class="header-company-selected" id="headerSelectedCompany" style="display:none">
+            <span class="selected-label">Empresa seleccionada</span>
+            <span class="selected-name">—</span>
+            <div class="selected-actions">
+              <span class="selected-role"></span>
+              <button class="change-company-btn" type="button">Cambiar</button>
+            </div>
         </div>
 
         <!-- Botón de Cerrar Sesión -->

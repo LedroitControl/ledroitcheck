@@ -32,7 +32,7 @@ class IngresosActivosWidget {
                 return false;
             }
 
-            // Autorizar si el usuario tiene rol A1, A2 o A3 en cualquier empresa
+            // Autorizar si el usuario tiene rol A1, A2, A3 o A4 en cualquier empresa
             for (const empresa of userEmpresas) {
                 if (empresa && empresa.rol) {
                     const rol = Array.isArray(empresa.rol) ? empresa.rol[0] : empresa.rol;
@@ -40,15 +40,17 @@ class IngresosActivosWidget {
                         const roleMatch = rol.match(/A[1-4]/);
                         const userRole = roleMatch ? roleMatch[0] : 'A4';
                         console.log(`Rol detectado en "${empresa.nombre}":`, userRole);
-                        if (userRole === 'A1' || userRole === 'A2' || userRole === 'A3') {
-                            console.log('✅ Usuario autorizado para ver Ingresos Activos');
+                        // A partir de ahora, cualquier rol A1-A4 puede VER el gadget.
+                        // Las acciones de configuración/edición seguirán restringidas (A1/A2).
+                        if (userRole === 'A1' || userRole === 'A2' || userRole === 'A3' || userRole === 'A4') {
+                            console.log('✅ Usuario autorizado para ver Ingresos Activos (modo lectura si es A3/A4)');
                             return true;
                         }
                     }
                 }
             }
 
-            console.log('❌ Usuario sin permisos A1/A2/A3 en sus empresas');
+            console.log('❌ Usuario sin rol válido A1/A2/A3/A4 en sus empresas');
             return false;
         } catch (error) {
             console.error('Error obteniendo rol del usuario:', error);

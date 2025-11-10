@@ -380,6 +380,52 @@ class FirestoreManager {
         const snap = await this._jornadasOpenRef(userKey).get();
         return snap.exists ? snap.data() : null;
     }
+
+    /**
+     * Obtiene la última jornada cerrada del usuario buscando en todas sus empresas
+     * basadas en ls_session.empresas.
+     * Devuelve { empresa, folio, horaEntrada, horaSalida, duracionMs } o null.
+     */
+    async getUltimaJornada(iniciales) {
+        try {
+            if (!this.db || !iniciales) return null;
+            const userKey = this._normalizeIniciales(iniciales);
+            // Obtener lista de empresas desde sesión local
+            let empresas = [];
+            try {
+                const sesRaw = sessionStorage.getItem('ls_session') || localStorage.getItem('ls_session');
+                const ses = sesRaw ? JSON.parse(sesRaw) : null;
+                empresas = Array.isArray(ses?.empresas) ? ses.empresas.map(e => e?.nombre).filter(Boolean) : [];
+            } catch {}
+            if (!empresas || empresas.length === 0) return null;
+
+            let mejor = null;
+            for (const empresaNombre of empresas) {
+                try {
+                    const col = this.db
+                        .collection('jornadas').doc(empresaNombre)
+                        .collection('usuarios').doc(userKey)
+                        .collection('jornadas');
+                    // Tomar las últimas 5 por horaEntrada para localizar la más reciente cerrada
+                    const qs = await col.orderBy('horaEntrada', 'desc').limit(5).get();
+                    qs.forEach(doc => {
+                        const d = doc.data();
+                        if (d && d.estado === 'cerrada' && d.horaEntrada && d.horaSalida) {
+                            const he = d.horaEntrada.toDate ? d.horaEntrada.toDate() : null;
+                            const hs = d.horaSalida.toDate ? d.horaSalida.toDate() : null;
+                            if (!he || !hs) return;
+                            const dur = hs.getTime() - he.getTime();
+                            const candidato = { empresa: empresaNombre, folio: d.folio, horaEntrada: he, horaSalida: hs, duracionMs: dur };
+                            if (!mejor || (candidato.horaSalida.getTime() > mejor.horaSalida.getTime())) {
+                                mejor = candidato;
+                            }
+                        }
+                    });
+                } catch {}
+            }
+            return mejor;
+        } catch { return null; }
+    }
 }
 
 // Instancia global del manejador de Firestore
@@ -411,7 +457,14 @@ window.openJornada = async function(empresaNombre, ubicacion, dispositivo, ip) {
             console.error('Sin iniciales en ls_session');
             return { success: false, reason: 'no_session' };
         }
-        return await firestoreManager.openJornada({ empresaNombre, iniciales, ubicacion, dispositivo, ip });
+        const result = await firestoreManager.openJornada({ empresaNombre, iniciales, ubicacion, dispositivo, ip });
+        // Notificar al header en tiempo real
+        try {
+            if (result?.success) {
+                window.dispatchEvent(new CustomEvent('jornadaChanged', { detail: { status: 'open', empresaNombre, iniciales } }));
+            }
+        } catch (e) { /* noop */ }
+        return result;
     } catch (e) {
         console.error('Error en openJornada:', e);
         return { success: false, reason: 'exception', data: { message: e?.message } };
@@ -427,7 +480,14 @@ window.closeJornada = async function() {
             console.error('Sin iniciales en ls_session');
             return { success: false, reason: 'no_session' };
         }
-        return await firestoreManager.closeJornada({ iniciales });
+        const result = await firestoreManager.closeJornada({ iniciales });
+        // Notificar al header en tiempo real
+        try {
+            if (result?.success) {
+                window.dispatchEvent(new CustomEvent('jornadaChanged', { detail: { status: 'closed', iniciales } }));
+            }
+        } catch (e) { /* noop */ }
+        return result;
     } catch (e) {
         console.error('Error en closeJornada:', e);
         return { success: false, reason: 'exception', data: { message: e?.message } };
