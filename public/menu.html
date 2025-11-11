@@ -532,17 +532,43 @@
 
         // 1) Render inmediato
         if (forceSelector) {
-          renderBienvenida(backdrop, ses, { modo:'selector' });
+          // Marcar selector forzado para que ninguna actualización de fondo lo cambie a "abierta"
+          try { backdrop.dataset.forceSelector = '1'; } catch {}
+          // Obtener "Última jornada" antes de renderizar para evitar doble render/parpadeo
+          let ultima = null;
+          try {
+            if (window.firestoreManager && typeof window.firestoreManager.getUltimaJornada === 'function'){
+              ultima = await window.firestoreManager.getUltimaJornada(ses.iniciales);
+            }
+          } catch {}
+          const opts = ultima ? { modo:'selector', ultima } : { modo:'selector' };
+          renderBienvenida(backdrop, ses, opts);
         } else if (activas.length === 1) {
           const unica = activas[0];
           setEmpresaSeleccionadaEnSesion(unica.nombre, unica.rol || []);
-          renderBienvenida(backdrop, JSON.parse(sessionStorage.getItem('ls_session')||localStorage.getItem('ls_session')), { modo:'cerrada' });
+          // Obtener "Última jornada" antes de renderizar para mostrarla desde el inicio
+          let ultima = null;
+          try {
+            if (window.firestoreManager && typeof window.firestoreManager.getUltimaJornada === 'function'){
+              ultima = await window.firestoreManager.getUltimaJornada(ses.iniciales);
+            }
+          } catch {}
+          const opts = ultima ? { modo:'cerrada', ultima } : { modo:'cerrada' };
+          renderBienvenida(backdrop, JSON.parse(sessionStorage.getItem('ls_session')||localStorage.getItem('ls_session')), opts);
           const el = backdrop.querySelector('#relojAhora');
           if (el) { const tick = () => { const d = new Date(); el.textContent = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`; }; tick(); backdrop._clockInterval = setInterval(tick, 1000); }
           const btn = backdrop.querySelector('#btnAbrir');
           if (btn) { window.bindAbrir(btn, unica.nombre); }
         } else {
-          renderBienvenida(backdrop, ses, { modo:'selector' });
+          // Cargar "Última jornada" para mostrarla también en el selector inicial
+          let ultima = null;
+          try {
+            if (window.firestoreManager && typeof window.firestoreManager.getUltimaJornada === 'function'){
+              ultima = await window.firestoreManager.getUltimaJornada(ses.iniciales);
+            }
+          } catch {}
+          const opts = ultima ? { modo:'selector', ultima } : { modo:'selector' };
+          renderBienvenida(backdrop, ses, opts);
         }
 
         // 2) Actualización en background (estado real de jornada + última jornada)
